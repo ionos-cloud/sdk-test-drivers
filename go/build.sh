@@ -28,7 +28,8 @@ if [ "${core_lib_path}" = "" ]; then
 fi
 
 # replace core lib version
-sed -i .bak "s/^\(.*\)github.com\/ionos-cloud\/ionos-cloud-sdk-go\(.*\)$/\1github.com\/ionos-cloud\/ionos-cloud-sdk-go\/${major} ${version}/g" go.mod || exit 1
+# NOTE: THIS RUNS ON LINUX ONLY - DOESN'T WORK ON OSX - on OSX the -i flag requires an extension name to save backups to
+sed -i "s/^\(.*\)github.com\/ionos-cloud\/ionos-cloud-sdk-go\(.*\)$/\1github.com\/ionos-cloud\/ionos-cloud-sdk-go\/${major} ${version}/g" go.mod || exit 1
 
 # remove backup file created by sed
 rm -f go.mod.bak

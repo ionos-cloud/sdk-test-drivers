@@ -35,3 +35,4 @@ rm -f go.mod.bak
 
 # use locally installed core library
 echo "replace github.com/ionos-cloud/ionos-cloud-sdk-go/${major} => ${core_lib_path}" >> go.mod || exit 1
+go build . || exit 1

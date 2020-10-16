@@ -4,7 +4,7 @@
 import sys
 import json
 from . import api as request_api_package
-from exceptions import ApiException
+from .exceptions import ApiException
 import ionossdk
 import re
 import os

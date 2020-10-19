@@ -33,9 +33,14 @@ type HttpResponse struct {
 }
 
 type Output struct {
-	Error 			*string			`json:"error,omitempty"`
+	Error 			*ErrorStruct	`json:"error,omitempty"`
 	HttpResponse	HttpResponse	`json:"httpResponse"`
 	Result			interface{}		`json:"result"`
+}
+
+type ErrorStruct struct {
+	Message string					`json:"message,omitempty"`
+	ApiResponse *HttpResponse		`json:"apiResponse"`
 }
 
 const (
@@ -58,8 +63,7 @@ func computeMethodArgs(methodFromVal reflect.Value, params []interface{}, output
 	args[0] = reflect.ValueOf(context.TODO())
 
 	if len(params) > numArgs - 1 {
-		errorMsg := fmt.Sprintf("too many params; found %d, expected %d", len(params), numArgs - 1)
-		output.Error = &errorMsg
+		output.Error = &ErrorStruct{Message: fmt.Sprintf("too many params; found %d, expected %d", len(params), numArgs - 1)}
 		return args
 	}
 
@@ -93,8 +97,7 @@ func computeMethodArgs(methodFromVal reflect.Value, params []interface{}, output
 
 			/* map the params map to struct */
 			if reflect.TypeOf(inputArg).Kind() != reflect.Map {
-				errorMsg := fmt.Sprintf("param %d expected to be a map for type %s", j + 1, argTypeName)
-				output.Error = &errorMsg
+				output.Error = &ErrorStruct{Message: fmt.Sprintf("param %d expected to be a map for type %s", j + 1, argTypeName)}
 				break
 			}
 
@@ -102,8 +105,7 @@ func computeMethodArgs(methodFromVal reflect.Value, params []interface{}, output
 				tmpRes := reflect.New(arg).Interface()
 				decoder, errDecode = getDecoder(&tmpRes)
 				if errDecode != nil {
-					errorMsg := errDecode.Error()
-					output.Error = &errorMsg
+					output.Error = &ErrorStruct{Message: errDecode.Error()}
 					break
 				}
 				errDecode = decoder.Decode(inputArg)
@@ -113,8 +115,7 @@ func computeMethodArgs(methodFromVal reflect.Value, params []interface{}, output
 				tmpRes := reflect.Zero(arg).Interface()
 				decoder, errDecode = getDecoder(&tmpRes)
 				if errDecode != nil {
-					errorMsg := errDecode.Error()
-					output.Error = &errorMsg
+					output.Error = &ErrorStruct{Message: errDecode.Error()}
 					break
 				}
 				errDecode = decoder.Decode(inputArg)
@@ -123,8 +124,7 @@ func computeMethodArgs(methodFromVal reflect.Value, params []interface{}, output
 			}
 
 			if errDecode != nil {
-				errorMsg := errDecode.Error()
-				output.Error = &errorMsg
+				output.Error = &ErrorStruct{Message: errDecode.Error()}
 				break
 			}
 
@@ -144,14 +144,16 @@ func callMethod(method reflect.Value, args []reflect.Value, output *Output) {
 	apiResponse := reflectRes[1].Interface().(*sdk.APIResponse)
 	callErr := reflectRes[2].Interface()
 	if callErr != nil {
-		errMessage := callErr.(error).Error()
-		output.Error = &errMessage
+		output.Error = &ErrorStruct{Message: callErr.(error).Error()}
 	}
 	if apiResponse != nil && apiResponse.Response != nil {
 		output.HttpResponse = HttpResponse{
 			StatusCode: apiResponse.StatusCode,
 			Headers:    apiResponse.Header,
 			Body:       string(apiResponse.Payload),
+		}
+		if output.Error != nil {
+			output.Error.ApiResponse = &output.HttpResponse
 		}
 	}
 }
@@ -162,8 +164,7 @@ func callWaitForRequest(method reflect.Value, args []reflect.Value, output *Outp
 	apiResponse := reflectRes[0].Interface().(*sdk.APIResponse)
 	callErr := reflectRes[1].Interface()
 	if callErr != nil {
-		errMessage := callErr.(error).Error()
-		output.Error = &errMessage
+		output.Error = &ErrorStruct{Message: callErr.(error).Error()}
 	}
 	if apiResponse != nil && apiResponse.Response != nil {
 		output.HttpResponse = HttpResponse{
@@ -207,8 +208,7 @@ func main() {
 
 	input := Input{}
 	if err := json.Unmarshal([]byte(inputJson), &input); err != nil {
-		errorMessage := fmt.Sprintf("{\"error\": \"%s\"}", err.Error())
-		output.Error = &errorMessage
+		output.Error = &ErrorStruct{Message: fmt.Sprintf("{\"error\": \"%s\"}", err.Error())}
 		outputJson, _ := json.Marshal(output)
 		fmt.Println(string(outputJson))
 		os.Exit(1)
@@ -232,8 +232,7 @@ func main() {
 
 	operation := strings.Title(strings.TrimSpace(input.Operation))
 	if operation == "" {
-		errorMessage := "missing operation"
-		output.Error = &errorMessage
+		output.Error = &ErrorStruct{Message: "missing operation"}
 		outputJson, _ := json.Marshal(output)
 		fmt.Println(string(outputJson))
 		os.Exit(1)
@@ -265,8 +264,7 @@ func main() {
 	}
 
 	if !found {
-		errorMessage := fmt.Sprintf("operation %s not found", input.Operation)
-		output.Error = &errorMessage
+		output.Error = &ErrorStruct{Message: fmt.Sprintf("operation %s not found", input.Operation)}
 	}
 
 	outputJson, _ := json.Marshal(output)

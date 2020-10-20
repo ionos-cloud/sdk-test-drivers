@@ -195,16 +195,19 @@ func searchAndCallMethod(val reflect.Value, name string, params []interface{}, o
 
 func main() {
 
-	reader := bufio.NewReader(os.Stdin)
-	inputJson, _ := reader.ReadString('\n')
-
-	/* debug
-	inputJson := `
-	{"operation":"datacentersGet","params":["f7794b79-496a-4d02-a1a8-bd664e7af440"]}
-`
-	 */
-
 	output := Output{}
+	var inputJson string
+
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		inputJson += scanner.Text()
+	}
+
+	if err := scanner.Err(); err != nil {
+		output.Error = &ErrorStruct{Message: fmt.Sprintf("input error: %s", err.Error())}
+		os.Exit(1)
+	}
+
 
 	input := Input{}
 	if err := json.Unmarshal([]byte(inputJson), &input); err != nil {

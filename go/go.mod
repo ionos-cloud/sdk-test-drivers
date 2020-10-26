@@ -5,4 +5,6 @@ require (
 	github.com/mitchellh/mapstructure v1.3.3
 )
 
+replace github.com/mitchellh/mapstructure => /Users/florin/work/code/mapstructure
+
 go 1.13

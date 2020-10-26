@@ -51,6 +51,7 @@ func getDecoder(result interface{}) (*mapstructure.Decoder, error) {
 	var decoderConfig = &mapstructure.DecoderConfig{
 		ErrorUnused: true,
 		Result: result,
+		CaseSensitive: true,
 	}
 	return mapstructure.NewDecoder(decoderConfig)
 }

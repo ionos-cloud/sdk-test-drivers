@@ -5,15 +5,15 @@ import sys
 import json
 from . import api as request_api_package
 from .exceptions import ApiException
-import ionos_cloud_sdk
+import ionossdk
 import re
 import os
 
-configuration = ionos_cloud_sdk.Configuration(
+configuration = ionossdk.Configuration(
     username=os.environ.get('IONOS_USERNAME'),
     password=os.environ.get('IONOS_PASSWORD')
 )
-api_client = ionos_cloud_sdk.ApiClient(configuration)
+api_client = ionossdk.ApiClient(configuration)
 
 input = sys.stdin.readlines()
 testing_data = json.loads(input[0])
@@ -41,7 +41,7 @@ def get_class_and_method(operation):
 
 if operation == 'waitForRequest':
     request_id = re.search('/requests/([-A-Fa-f0-9]+)/', params[0]).group(1)
-    # ionos_cloud_sdk.RequestApi(api_client).requests_status_get,
+    # ionossdk.RequestApi(api_client).requests_status_get,
     api_client.wait_for_completion(request_id)
     sys.stdout.write(json.dumps({}))
     exit()

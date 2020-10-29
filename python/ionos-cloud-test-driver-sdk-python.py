@@ -19,7 +19,7 @@ input = sys.stdin.readlines()
 testing_data = json.loads(input[0])
 
 operation = testing_data['operation']
-params = testing_data['params']
+params = list(map(lambda p: p['value'], testing_data['params']))
 
 def get_request_classes():
     classes = []

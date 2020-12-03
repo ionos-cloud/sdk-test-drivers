@@ -8,6 +8,8 @@ import com.ionossdk.ApiResponse;
 import com.ionossdk.Configuration;
 import com.ionossdk.auth.*;
 
+import com.ionossdk.api.DataCenterApi;
+
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
 import org.reflections.scanners.SubTypesScanner;
@@ -125,22 +127,34 @@ public class Main {
     }
 
     public static Object[] getParapeterList(Method method, List<Map<String, Object>> params) {
-        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
 
         Class[] parameterTypes = method.getParameterTypes();
         List<Object> paramList = new ArrayList<>();
 
+        List mandatoryDefaultParameters = new ArrayList<Object>(){{
+            add(true); // pretty
+            add(1); // depth
+            add(1); // contract number
+            add(0); // offset
+            add(100); // limit
+        }};
+
 
         ObjectMapper om = new ObjectMapper();
 
-        for (int i=0; i<params.size(); i++) {
-            Map<String, Object> param = params.get(i);
-            paramList.add(om.convertValue(param.get("value"), parameterTypes[i]));
+        for (int i=0; i<parameterTypes.length; i++) {
+            /**
+             * add parameters from test suite
+             * then default mandatory parameters
+             */
+            if (params.size() > i) {
+                Map<String, Object> param = params.get(i);
+                paramList.add(om.convertValue(param.get("value"), parameterTypes[i]));
+            } else {
+                paramList.add(mandatoryDefaultParameters.get(0));
+                mandatoryDefaultParameters.remove(0);
+            }
         }
-
-        paramList.add(true);
-        paramList.add(1);
-        paramList.add(1);
 
         return paramList.toArray();
     }

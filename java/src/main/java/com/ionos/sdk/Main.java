@@ -23,7 +23,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Example {
+public class Main {
 
     final static String BASE_PATH = "https://api.ionos.com/cloudapi/v5";
 

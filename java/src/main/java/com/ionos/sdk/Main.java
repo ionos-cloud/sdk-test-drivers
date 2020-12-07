@@ -102,19 +102,39 @@ public class Main {
                         put("statusCode", apiResponse.getStatusCode());
                         put("headers", headers);
                     }});
-                    put("result", apiResponse.getData());
+                    put("result", castEnumTypeToLowercaseString(apiResponse.getData()));
                     put("error", null);
                 }}
             );
             System.out.print(json);
         } catch (Exception e) {
+            Map httpResponse = new ObjectMapper().convertValue(e.getCause(), Map.class);
+            if (httpResponse.containsKey("code")) {
+                httpResponse.put("statusCode", httpResponse.get("code"));
+            }
             String json = ow.writeValueAsString(
-                    new HashMap<String, Object>() {{
-                        put("error", e.getMessage());
-                    }}
+                new HashMap<String, Object>() {{
+                    put("error", true);
+                    put("httpResponse", httpResponse);
+                    put("message", e.getCause().getMessage());
+                }}
             );
             System.out.print(json);
         }
+    }
+
+    public static Object castEnumTypeToLowercaseString(Object body) {
+        ObjectMapper oMapper = new ObjectMapper();
+        Map<String, Object> bodyAsMap = oMapper.convertValue(body, Map.class);
+        if (bodyAsMap == null) {
+            return body;
+        }
+        for (Object key : bodyAsMap.keySet()) {
+            if (key.equals("type")) {
+                bodyAsMap.put("type", bodyAsMap.get("type").toString().toLowerCase());
+            }
+        }
+        return bodyAsMap;
     }
 
     public static String getRequestIdFromUrl(String url) {

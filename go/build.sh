@@ -29,11 +29,11 @@ fi
 
 # replace core lib version
 # NOTE: THIS RUNS ON LINUX ONLY - DOESN'T WORK ON OSX - on OSX the -i flag requires an extension name to save backups to
-sed -i "s/^\(.*\)github.com\/ionos-cloud\/ionos-cloud-sdk-go\(.*\)$/\1github.com\/ionos-cloud\/ionos-cloud-sdk-go\/${major} ${version}/g" go.mod || exit 1
+sed -i "s/^\(.*\)github.com\/ionos-cloud\/sdk-go\(.*\)$/\1github.com\/ionos-cloud\/sdk-go\/${major} ${version}/g" go.mod || exit 1
 
 # remove backup file created by sed
 rm -f go.mod.bak
 
 # use locally installed core library
-echo "replace github.com/ionos-cloud/ionos-cloud-sdk-go/${major} => ${core_lib_path}" >> go.mod || exit 1
+echo "replace github.com/ionos-cloud/sdk-go/${major} => ${core_lib_path}" >> go.mod || exit 1
 go build . || exit 1

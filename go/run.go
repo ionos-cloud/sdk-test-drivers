@@ -121,12 +121,14 @@ func convertParamToArg(param interface{}, arg reflect.Type) (reflect.Value, erro
 
 	} else {
 		paramKind := reflect.TypeOf(param).Kind()
-		if paramKind != argKind {
-			return ret, errors.New(fmt.Sprintf("Needed %s arg but got %s", argKind, paramKind))
-		}
-		ret = reflect.ValueOf(param)
-	}
-
+		if paramKind == reflect.Float64 && argKind == reflect.Int32 {
+			ret = reflect.ValueOf(int32(param.(float64)))
+		} else {
+			if paramKind != argKind {
+				return ret, errors.New(fmt.Sprintf("Needed %s arg but got %s", argKind, paramKind))
+			}
+			ret = reflect.ValueOf(param)
+		}	}
 	return ret, nil
 }
 

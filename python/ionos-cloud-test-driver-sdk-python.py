@@ -19,7 +19,7 @@ input = sys.stdin.readlines()
 testing_data = json.loads(input[0])
 
 operation = testing_data['operation']
-params = list(map(lambda p: p['value'], testing_data['params']))
+params = {re.sub(r'(?<!^)(?=[A-Z])', '_', p['name']).lower(): p['value'] for p in testing_data['params']}
 
 def get_request_classes():
     classes = []
@@ -40,7 +40,7 @@ def get_class_and_method(operation):
     return None, None
 
 if operation == 'waitForRequest':
-    request_id = re.search('/requests/([-A-Fa-f0-9]+)/', params[0]).group(1)
+    request_id = re.search('/requests/([-A-Fa-f0-9]+)/', params['request']).group(1)
     # ionoscloud.RequestApi(api_client).requests_status_get,
     api_client.wait_for_completion(request_id)
     sys.stdout.write(json.dumps({}))
@@ -49,7 +49,7 @@ if operation == 'waitForRequest':
 classApi, method = get_class_and_method(operation)
 api_instance = classApi(api_client)
 try:
-    response = method(api_instance, *params, response_type='object')
+    response = method(api_instance, response_type='object', **params)
 
     return_data = response[0]
     status_code = response[1]

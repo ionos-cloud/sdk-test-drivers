@@ -41,7 +41,6 @@ def get_class_and_method(operation):
 
 if operation == 'waitForRequest':
     request_id = re.search('/requests/([-A-Fa-f0-9]+)/', params['request']).group(1)
-    # ionoscloud.RequestApi(api_client).requests_status_get,
     api_client.wait_for_completion(request_id)
     sys.stdout.write(json.dumps({}))
     exit()
@@ -64,9 +63,7 @@ try:
       }
     }
 
-    sys.stdout.write(
-        json.dumps(driver_output)
-    )
+    sys.stdout.write(json.dumps(driver_output))
 except ApiException as e:
     exception_body = e.body
     exception_status = e.status
@@ -86,4 +83,4 @@ except ApiException as e:
     )
 except Exception as e:
     sys.stdout.write("General Exception occured: ")
-    sys.stdout.write(e)
+    sys.stdout.write(str(e))

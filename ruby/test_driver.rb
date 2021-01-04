@@ -4,14 +4,14 @@ $LOAD_PATH << '.'
 
 require 'json'
 require 'pp'
-require 'openapi_client'
+require 'ionoscloud'
 
-config = OpenapiClient::Configuration.new
+config = Ionoscloud::Configuration.new
 
 config.username = ENV['IONOS_USERNAME']
 config.password = ENV['IONOS_PASSWORD']
 
-api_client = OpenapiClient::ApiClient.new(config)
+api_client = Ionoscloud::ApiClient.new(config)
 
 def underscore_string(str)
   str.gsub(/::/, '/')
@@ -22,12 +22,12 @@ def underscore_string(str)
 end
 
 def get_class(operation)
-  OpenapiClient.constants.select do |c|
-    OpenapiClient.const_get(c).is_a? Class and OpenapiClient.const_get(c).name.end_with? 'Api'
+  Ionoscloud.constants.select do |c|
+    Ionoscloud.const_get(c).is_a? Class and Ionoscloud.const_get(c).name.end_with? 'Api'
   end.each do |class_symbol|
     class_name = class_symbol.to_s
-    methods = OpenapiClient.const_get(class_name).new.methods - Object.methods
-    return OpenapiClient.const_get(class_name) if methods.map(&:to_s).include? operation
+    methods = Ionoscloud.const_get(class_name).new.methods - Object.methods
+    return Ionoscloud.const_get(class_name) if methods.map(&:to_s).include? operation
   end
   nil
 end
@@ -87,7 +87,7 @@ else
         'body' => response
       }
     }]
-  rescue OpenapiClient::ApiError => e
+  rescue Ionoscloud::ApiError => e
     exception_body = e.response_body
     exception_status = e.code
     exception_headers = e.response_headers

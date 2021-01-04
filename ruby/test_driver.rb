@@ -3,7 +3,6 @@
 $LOAD_PATH << '.'
 
 require 'json'
-require 'pp'
 require 'ionoscloud'
 
 config = Ionoscloud::Configuration.new

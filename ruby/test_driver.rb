@@ -36,36 +36,32 @@ testing_data = JSON.parse(input.gsub('\"', '"'))
 
 operation = testing_data['operation']
 
-if operation == 'waitForRequest'
-  request_id = testing_data['params'][0]['value'].scan(%r{/requests/(\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b)}).last.first
+begin
+  if operation == 'waitForRequest'
+    request_id = testing_data['params'][0]['value'].scan(%r{/requests/(\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b)}).last.first
+    api_client.wait_for_completion(request_id)
+    puts JSON[{}]
+  else
+    method_name = underscore_string(operation) + '_with_http_info'
 
-  api_client.wait_for_completion(request_id)
-  puts JSON[{}]
-  exit
+    cls = get_class method_name
 
-else
-  method_name = underscore_string(operation) + '_with_http_info'
+    special_params_names = %w[pretty depth contractNumber offset limit]
 
-  cls = get_class method_name
-
-  special_params_names = %w[pretty depth contractNumber]
-
-  normal_params, special_params = testing_data['params'].partition do |el|
-    special_params_names.none? do |special_param_name|
-      special_param_name == el['name']
+    normal_params, special_params = testing_data['params'].partition do |el|
+      special_params_names.none? do |special_param_name|
+        special_param_name == el['name']
+      end
     end
-  end
 
-  normal_params = normal_params.map { |el| el['value'] }
+    normal_params = normal_params.map { |el| el['value'] }
 
-  special_params = special_params.each_with_object({}) do |current, total|
-    total[current['name']] = current['value']
-  end
+    special_params = special_params.each_with_object({}) do |current, total|
+      total[current['name']] = current['value']
+    end
 
-  special_params[:debug_auth_names] = ['Basic Authentication']
+    special_params[:debug_auth_names] = ['Basic Authentication']
 
-  output = ''
-  begin
     response, status_code, headers = cls.new(api_client).public_send(
       method_name.to_sym,
       *normal_params,
@@ -78,7 +74,7 @@ else
       value.split(',', -1)
     end
 
-    output = JSON[{
+    puts JSON[{
       'result' => response,
       'httpResponse' => {
         'statusCode' => status_code,
@@ -86,23 +82,25 @@ else
         'body' => response
       }
     }]
-  rescue Ionoscloud::ApiError => e
-    exception_body = e.response_body
-    exception_status = e.code
-    exception_headers = e.response_headers
-
-    output = JSON[{
-      'result' => 'ApiException occured',
-      'httpResponse' => {
-        'statusCode' => exception_status,
-        'headers' => exception_headers,
-        'body' => JSON.parse(exception_body)
-      },
-      'error' => JSON.parse(exception_body)
-    }]
-  rescue StandardError => e
-    output = 'General Exception occured: ' + e.inspect
   end
-
-  puts output
+rescue Ionoscloud::ApiError => e
+  puts JSON[{
+    'result' => 'ApiException occured',
+    'httpResponse' => {
+      'statusCode' => e.code,
+      'headers' => e.response_headers,
+      'body' => JSON.parse(e.response_body)
+    },
+    'error' => JSON.parse(e.response_body)
+  }]
+rescue StandardError => e
+  puts JSON[{
+    'result' => 'GeneralException occured',
+    'httpResponse' => {
+      'statusCode' => nil,
+      'headers' => nil,
+      'body' => e.inspect
+    },
+    'error' => e.inspect
+  }]
 end

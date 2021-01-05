@@ -99,7 +99,7 @@ rescue StandardError => e
     'httpResponse' => {
       'statusCode' => nil,
       'headers' => nil,
-      'body' => e.inspect
+      'body' => nil
     },
     'error' => e.inspect
   }]

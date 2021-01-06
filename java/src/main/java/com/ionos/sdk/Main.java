@@ -2,13 +2,11 @@ package com.ionos.sdk;
 // Import classes:
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.ionossdk.ApiClient;
-import com.ionossdk.ApiException;
-import com.ionossdk.ApiResponse;
-import com.ionossdk.Configuration;
-import com.ionossdk.auth.*;
-
-import com.ionossdk.api.DataCenterApi;
+import com.ionoscloud.ApiClient;
+import com.ionoscloud.ApiException;
+import com.ionoscloud.ApiResponse;
+import com.ionoscloud.Configuration;
+import com.ionoscloud.auth.*;
 
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
@@ -57,7 +55,7 @@ public class Main {
                 System.out.printf("{\"error\": \"%s\"}", e.getMessage());
             }
         } else {
-            Set<Class<? extends Object>> classSet = getAccessibleMethods("com.ionossdk.api");
+            Set<Class<? extends Object>> classSet = getAccessibleMethods("com.ionoscloud.api");
 
             for (Class apiClass : classSet) {
                 for (Method method : apiClass.getMethods()) {

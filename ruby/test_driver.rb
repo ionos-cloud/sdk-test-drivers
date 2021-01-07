@@ -42,11 +42,11 @@ begin
     api_client.wait_for_completion(request_id)
     puts JSON[{}]
   else
-    method_name = underscore_string(operation) + '_with_http_info'
+    method_name =  "#{underscore_string(operation)}_with_http_info"
 
     cls = get_class method_name
 
-    special_params_names = %w[pretty depth contractNumber offset limit]
+    special_params_names = %w[pretty depth XContractNumber contractNumber offset limit]
 
     normal_params, special_params = testing_data['params'].partition do |el|
       special_params_names.none? do |special_param_name|

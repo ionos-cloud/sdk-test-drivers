@@ -6,18 +6,6 @@ import ionoscloud
 import re
 import os
 
-configuration = ionoscloud.Configuration(
-    username=os.environ.get('IONOS_USERNAME'),
-    password=os.environ.get('IONOS_PASSWORD'),
-)
-api_client = ionoscloud.ApiClient(configuration)
-
-input = sys.stdin.readlines()
-testing_data = json.loads(input[0])
-
-operation = testing_data['operation']
-params = {re.sub(r'(?<!^)(?=[A-Z])', '_', p['name']).lower(): p['value'] for p in testing_data['params']}
-
 
 def get_request_classes():
     classes = []
@@ -41,6 +29,18 @@ def get_class_and_method(operation):
 
 
 if __name__ == "__main__":
+    configuration = ionoscloud.Configuration(
+        username=os.environ.get('IONOS_USERNAME'),
+        password=os.environ.get('IONOS_PASSWORD'),
+    )
+    api_client = ionoscloud.ApiClient(configuration)
+
+    input = sys.stdin.readlines()
+    testing_data = json.loads(input[0])
+
+    operation = testing_data['operation']
+    params = {re.sub(r'(?<!^)(?=[A-Z])', '_', p['name']).lower(): p['value'] for p in testing_data['params']}
+
     try:
         if operation == 'waitForRequest':
             request_id = re.search('/requests/([-A-Fa-f0-9]+)/', params['request']).group(1)

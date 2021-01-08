@@ -34,6 +34,7 @@ repositories {
 }
 
 dependencies {
+    implementation "com.thoughtworks.paranamer:paranamer:2.8"
     implementation "com.ionoscloud:ionoscloud:5.0"
     implementation "org.reflections:reflections:0.9.11"
     implementation "com.fasterxml.jackson.core:jackson-databind:2.11.3"

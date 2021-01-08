@@ -8,6 +8,10 @@ import com.ionoscloud.ApiResponse;
 import com.ionoscloud.Configuration;
 import com.ionoscloud.auth.*;
 
+import com.thoughtworks.paranamer.AnnotationParanamer;
+import com.thoughtworks.paranamer.BytecodeReadingParanamer;
+import com.thoughtworks.paranamer.CachingParanamer;
+import com.thoughtworks.paranamer.Paranamer;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
 import org.reflections.scanners.SubTypesScanner;
@@ -19,9 +23,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class Main {
 
@@ -44,10 +50,13 @@ public class Main {
          */
         String operation = map.get("operation");
         Object paramObject = map.get("params");
-        List<Map<String, Object>> params = (List<Map<String, Object>>) paramObject;
+        List<Map<String, Object>> paramList = (List<Map<String, Object>>) paramObject;
+
+        Map<String, Object> params = paramList.stream()
+                .collect(Collectors.toMap(s -> (String) s.get("name"), s -> s.get("value")));
 
         if (operation.equals("waitForRequest")) {
-            String requestId = getRequestIdFromUrl((String) params.get(0).get("value"));
+            String requestId = getRequestIdFromUrl((String) params.get("request"));
             try {
                 apiClient.waitForRequest(requestId, 20000, 4000, 2000);
                 System.out.print("{\"error\": null}");
@@ -78,6 +87,7 @@ public class Main {
     public static void performRequest(ApiClient apiClient, Class apiClass, Method method, Object[] prm) throws IOException {
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         try {
+
             ApiResponse<Object> apiResponse =
                     (ApiResponse<Object>) method.invoke(
                             apiClass.getDeclaredConstructor(
@@ -107,6 +117,7 @@ public class Main {
             System.out.print(json);
         } catch (Exception e) {
             Map httpResponse = new ObjectMapper().convertValue(e.getCause(), Map.class);
+
             if (httpResponse.containsKey("code")) {
                 httpResponse.put("statusCode", httpResponse.get("code"));
             }
@@ -144,33 +155,27 @@ public class Main {
         return null;
     }
 
-    public static Object[] getParapeterList(Method method, List<Map<String, Object>> params) {
-
+    public static Object[] getParapeterList(Method method, Map<String, Object> params) {
+        Paranamer info = new CachingParanamer(new AnnotationParanamer(new BytecodeReadingParanamer()));
+        String[] parameterNames = info.lookupParameterNames(method);
         Class[] parameterTypes = method.getParameterTypes();
+        Map<String, Class> paramTyp = new HashMap<>();
+
+        int i = 0;
+        for (String pn : parameterNames) {
+            paramTyp.put(pn, parameterTypes[i]);
+            i++;
+        }
+
         List<Object> paramList = new ArrayList<>();
-
-        List mandatoryDefaultParameters = new ArrayList<Object>(){{
-            add(true); // pretty
-            add(1); // depth
-            add(1); // contract number
-            add(0); // offset
-            add(100); // limit
-        }};
-
 
         ObjectMapper om = new ObjectMapper();
 
-        for (int i=0; i<parameterTypes.length; i++) {
-            /**
-             * add parameters from test suite
-             * then default mandatory parameters
-             */
-            if (params.size() > i) {
-                Map<String, Object> param = params.get(i);
-                paramList.add(om.convertValue(param.get("value"), parameterTypes[i]));
+        for (String parameterName : parameterNames) {
+            if (params.containsKey(parameterName)) {
+                paramList.add(om.convertValue(params.get(parameterName), paramTyp.get(parameterName)));
             } else {
-                paramList.add(mandatoryDefaultParameters.get(0));
-                mandatoryDefaultParameters.remove(0);
+                paramList.add(null);
             }
         }
 

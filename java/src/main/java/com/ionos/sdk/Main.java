@@ -62,7 +62,7 @@ public class Main {
         if (operation.equals("waitForRequest")) {
             String requestId = getRequestIdFromUrl((String) params.get("request"));
             try {
-                apiClient.waitForRequest(requestId, 20000, 4000, 2000);
+                apiClient.waitForRequest(requestId, 40000, 4000, 2000);
                 System.out.print("{\"error\": null}");
             } catch (ApiException e) {
                 System.out.printf("{\"error\": \"%s\"}", e.getMessage());

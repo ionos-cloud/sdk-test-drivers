@@ -12,6 +12,7 @@ import com.thoughtworks.paranamer.AnnotationParanamer;
 import com.thoughtworks.paranamer.BytecodeReadingParanamer;
 import com.thoughtworks.paranamer.CachingParanamer;
 import com.thoughtworks.paranamer.Paranamer;
+import org.apache.commons.text.WordUtils;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
 import org.reflections.scanners.SubTypesScanner;
@@ -23,7 +24,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -90,25 +90,29 @@ public class Main {
 
             ApiResponse<Object> apiResponse =
                     (ApiResponse<Object>) method.invoke(
-                            apiClass.getDeclaredConstructor(
-                                    new Class[]{ApiClient.class}
-                            ).newInstance(apiClient),
-                            prm
+                        apiClass.getDeclaredConstructor(
+                                new Class[]{ApiClient.class}
+                        ).newInstance(apiClient),
+                        prm
                     );
 
-            /**
-             * set Location instead of location
-             */
             Map<String, List<String>> headers = apiResponse.getHeaders();
-            List<String> requestUrl = headers.get("location");
-            headers.remove("location");
-            headers.put("Location", requestUrl);
+            Map<String, List<String>> headersObject = new HashMap<>();
+            for (String header : headers.keySet()) {
+                headersObject.put(
+                        WordUtils
+                            .capitalize(header.replace('-', ' '))
+                            .replace(' ', '-'),
+                        headers.get(header)
+                );
+            }
+
 
             String json = ow.writeValueAsString(
                 new HashMap<String, Object>() {{
                     put("httpResponse", new HashMap<String, Object>() {{
                         put("statusCode", apiResponse.getStatusCode());
-                        put("headers", headers);
+                        put("headers", headersObject);
                     }});
                     put("result", castEnumTypeToLowercaseString(apiResponse.getData()));
                     put("error", null);

@@ -7,11 +7,15 @@ import com.ionoscloud.ApiException;
 import com.ionoscloud.ApiResponse;
 import com.ionoscloud.Configuration;
 import com.ionoscloud.auth.*;
+import com.ionoscloud.model.Type;
 
+import com.ionoscloud.model.Volume;
 import com.thoughtworks.paranamer.AnnotationParanamer;
 import com.thoughtworks.paranamer.BytecodeReadingParanamer;
 import com.thoughtworks.paranamer.CachingParanamer;
 import com.thoughtworks.paranamer.Paranamer;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.text.WordUtils;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
@@ -88,6 +92,12 @@ public class Main {
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         try {
 
+//                    "test-nic.json",
+//                    "test-s3key.json",
+//                    "test-user-management.json",
+//                    "test-snapshot.json",
+//                    "test-server.json"
+
             ApiResponse<Object> apiResponse =
                     (ApiResponse<Object>) method.invoke(
                         apiClass.getDeclaredConstructor(
@@ -106,7 +116,6 @@ public class Main {
                         headers.get(header)
                 );
             }
-
 
             String json = ow.writeValueAsString(
                 new HashMap<String, Object>() {{
@@ -144,7 +153,7 @@ public class Main {
         }
         for (Object key : bodyAsMap.keySet()) {
             if (key.equals("type")) {
-                bodyAsMap.put("type", bodyAsMap.get("type").toString().toLowerCase());
+                bodyAsMap.put("type", Type.valueOf(bodyAsMap.get("type").toString()).getValue());
             }
         }
         return bodyAsMap;
@@ -159,15 +168,15 @@ public class Main {
         return null;
     }
 
-    public static Object[] getParapeterList(Method method, Map<String, Object> params) {
+    public static Object[] getParapeterList(Method method, Map<String, Object> testParams) {
         Paranamer info = new CachingParanamer(new AnnotationParanamer(new BytecodeReadingParanamer()));
-        String[] parameterNames = info.lookupParameterNames(method);
-        Class[] parameterTypes = method.getParameterTypes();
-        Map<String, Class> paramTyp = new HashMap<>();
+        String[] methodParameterNames = info.lookupParameterNames(method);
+        Class[] methodParameterTypes = method.getParameterTypes();
+        Map<String, Class> methodParameterTypesMap = new HashMap<>();
 
         int i = 0;
-        for (String pn : parameterNames) {
-            paramTyp.put(pn, parameterTypes[i]);
+        for (String pn : methodParameterNames) {
+            methodParameterTypesMap.put(pn, methodParameterTypes[i]);
             i++;
         }
 
@@ -175,9 +184,17 @@ public class Main {
 
         ObjectMapper om = new ObjectMapper();
 
-        for (String parameterName : parameterNames) {
-            if (params.containsKey(parameterName)) {
-                paramList.add(om.convertValue(params.get(parameterName), paramTyp.get(parameterName)));
+
+        for (String parameterName : methodParameterNames) {
+            if (testParams.containsKey(parameterName) || testParams.containsKey(StringUtils.capitalize(parameterName))) {
+                paramList.add(
+                    om.convertValue(
+                        testParams.get(parameterName) == null ?
+                            testParams.get(StringUtils.capitalize(parameterName)) : testParams.get(parameterName),
+                        methodParameterTypesMap.get(parameterName) == null ?
+                            methodParameterTypesMap.get(StringUtils.capitalize(parameterName)) : methodParameterTypesMap.get(parameterName)
+                    )
+                );
             } else {
                 paramList.add(null);
             }

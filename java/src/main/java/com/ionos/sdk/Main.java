@@ -62,7 +62,7 @@ public class Main {
         if (operation.equals("waitForRequest")) {
             String requestId = getRequestIdFromUrl((String) params.get("request"));
             try {
-                apiClient.waitForRequest(requestId, 40000, 4000, 2000);
+                apiClient.waitForRequest(requestId, 80000, 4000, 2000);
                 System.out.print("{\"error\": null}");
             } catch (ApiException e) {
                 System.out.printf("{\"error\": \"%s\"}", e.getMessage());
@@ -91,13 +91,6 @@ public class Main {
     public static void performRequest(ApiClient apiClient, Class apiClass, Method method, Object[] prm) throws IOException {
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         try {
-
-//                    "test-nic.json",
-//                    "test-s3key.json",
-//                    "test-user-management.json",
-//                    "test-snapshot.json",
-//                    "test-server.json"
-
             ApiResponse<Object> apiResponse =
                     (ApiResponse<Object>) method.invoke(
                         apiClass.getDeclaredConstructor(

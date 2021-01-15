@@ -2,13 +2,17 @@ package com.ionos.sdk;
 // Import classes:
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import com.ionoscloud.ApiClient;
 import com.ionoscloud.ApiException;
 import com.ionoscloud.ApiResponse;
 import com.ionoscloud.Configuration;
 import com.ionoscloud.auth.*;
+import com.ionoscloud.model.Contract;
 import com.ionoscloud.model.Type;
-
+import com.ionoscloud.model.KubernetesNodePool;
 import com.thoughtworks.paranamer.AnnotationParanamer;
 import com.thoughtworks.paranamer.BytecodeReadingParanamer;
 import com.thoughtworks.paranamer.CachingParanamer;
@@ -74,7 +78,7 @@ public class Main {
                         /**
                          * GET parameter list for api call
                          */
-                        Object[] prm = getParapeterList(method, params);
+                        Object[] prm = getParameterList(method, params);
 
                         /**
                          * Perform api call
@@ -89,6 +93,7 @@ public class Main {
     public static void performRequest(ApiClient apiClient, Class apiClass, Method method, Object[] prm) throws IOException {
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         try {
+
             ApiResponse<Object> apiResponse =
                     (ApiResponse<Object>) method.invoke(
                         apiClass.getDeclaredConstructor(
@@ -108,18 +113,23 @@ public class Main {
                 );
             }
 
+
+            Gson gson = new Gson();
             String json = ow.writeValueAsString(
                 new HashMap<String, Object>() {{
                     put("httpResponse", new HashMap<String, Object>() {{
                         put("statusCode", apiResponse.getStatusCode());
                         put("headers", headersObject);
                     }});
-                    put("result", castEnumTypeToLowercaseString(apiResponse.getData()));
+                    put("result", gson.fromJson(gson.toJsonTree(apiResponse.getData()).toString(), HashMap.class));
                     put("error", null);
                 }}
             );
             System.out.print(json);
         } catch (Exception e) {
+            e.printStackTrace();
+
+
             Map httpResponse = new ObjectMapper().convertValue(e.getCause(), Map.class);
 
             if (httpResponse.containsKey("code")) {
@@ -136,20 +146,6 @@ public class Main {
         }
     }
 
-    public static Object castEnumTypeToLowercaseString(Object body) {
-        ObjectMapper oMapper = new ObjectMapper();
-        Map<String, Object> bodyAsMap = oMapper.convertValue(body, Map.class);
-        if (bodyAsMap == null) {
-            return body;
-        }
-        for (Object key : bodyAsMap.keySet()) {
-            if (key.equals("type")) {
-                bodyAsMap.put("type", Type.valueOf(bodyAsMap.get("type").toString()).getValue());
-            }
-        }
-        return bodyAsMap;
-    }
-
     public static String getRequestIdFromUrl(String url) {
         Pattern p = Pattern.compile("/([-A-Fa-f0-9]+)/");
         Matcher m = p.matcher(url);
@@ -159,7 +155,7 @@ public class Main {
         return null;
     }
 
-    public static Object[] getParapeterList(Method method, Map<String, Object> testParams) {
+    public static Object[] getParameterList(Method method, Map<String, Object> testParams) {
         Paranamer info = new CachingParanamer(new AnnotationParanamer(new BytecodeReadingParanamer()));
         String[] methodParameterNames = info.lookupParameterNames(method);
         Class[] methodParameterTypes = method.getParameterTypes();
@@ -173,19 +169,28 @@ public class Main {
 
         List<Object> paramList = new ArrayList<>();
 
-        ObjectMapper om = new ObjectMapper();
+        Gson gson = new Gson();
+
 
 
         for (String parameterName : methodParameterNames) {
             if (testParams.containsKey(parameterName) || testParams.containsKey(StringUtils.capitalize(parameterName))) {
-                paramList.add(
-                    om.convertValue(
-                        testParams.get(parameterName) == null ?
-                            testParams.get(StringUtils.capitalize(parameterName)) : testParams.get(parameterName),
-                        methodParameterTypesMap.get(parameterName) == null ?
-                            methodParameterTypesMap.get(StringUtils.capitalize(parameterName)) : methodParameterTypesMap.get(parameterName)
-                    )
-                );
+                Object testParameter = testParams.get(parameterName) == null ?
+                        testParams.get(StringUtils.capitalize(parameterName)) : testParams.get(parameterName);
+                Class parameterType = methodParameterTypesMap.get(parameterName) == null ?
+                        methodParameterTypesMap.get(StringUtils.capitalize(parameterName)) :
+                        methodParameterTypesMap.get(parameterName);
+
+
+                if (testParameter instanceof Map || testParameter instanceof List) {
+                    paramList.add(gson.fromJson(
+                            gson.toJson(testParameter, testParameter.getClass()),
+                            parameterType
+                    ));
+                } else {
+                    paramList.add(testParameter);
+                }
+
             } else {
                 paramList.add(null);
             }

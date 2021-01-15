@@ -114,6 +114,7 @@ public class Main {
             }
 
 
+
             Gson gson = new Gson();
             String json = ow.writeValueAsString(
                 new HashMap<String, Object>() {{
@@ -127,9 +128,6 @@ public class Main {
             );
             System.out.print(json);
         } catch (Exception e) {
-            e.printStackTrace();
-
-
             Map httpResponse = new ObjectMapper().convertValue(e.getCause(), Map.class);
 
             if (httpResponse.containsKey("code")) {

@@ -31,10 +31,10 @@ repositories {
     mavenLocal()
     mavenCentral()
 }
-
+def sdkVersion = project.getProperties().get("sdkVersion")
 dependencies {
     implementation "com.thoughtworks.paranamer:paranamer:2.8"
-    implementation "com.ionoscloud:ionos-cloud-sdk:5.8-SNAPSHOT"
+    implementation "com.ionoscloud:ionos-cloud-sdk:${sdkVersion}"
     implementation "org.reflections:reflections:0.9.11"
     implementation "com.fasterxml.jackson.core:jackson-databind:2.11.3"
     implementation 'org.apache.commons:commons-text:1.9'

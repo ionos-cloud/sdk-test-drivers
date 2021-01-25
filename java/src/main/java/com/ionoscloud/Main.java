@@ -1,4 +1,4 @@
-package com.ionos.sdk;
+package com.ionoscloud;
 // Import classes:
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;

@@ -1,15 +1,19 @@
-package com.ionos.sdk;
+package com.ionoscloud;
 // Import classes:
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.ionossdk.ApiClient;
-import com.ionossdk.ApiException;
-import com.ionossdk.ApiResponse;
-import com.ionossdk.Configuration;
-import com.ionossdk.auth.*;
-
-import com.ionossdk.api.DataCenterApi;
-
+import com.google.gson.Gson;
+import com.ionoscloud.ApiClient;
+import com.ionoscloud.ApiException;
+import com.ionoscloud.ApiResponse;
+import com.ionoscloud.Configuration;
+import com.ionoscloud.auth.*;
+import com.thoughtworks.paranamer.AnnotationParanamer;
+import com.thoughtworks.paranamer.BytecodeReadingParanamer;
+import com.thoughtworks.paranamer.CachingParanamer;
+import com.thoughtworks.paranamer.Paranamer;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.WordUtils;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
 import org.reflections.scanners.SubTypesScanner;
@@ -24,6 +28,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class Main {
 
@@ -46,18 +51,21 @@ public class Main {
          */
         String operation = map.get("operation");
         Object paramObject = map.get("params");
-        List<Map<String, Object>> params = (List<Map<String, Object>>) paramObject;
+        List<Map<String, Object>> paramList = (List<Map<String, Object>>) paramObject;
+
+        Map<String, Object> params = paramList.stream()
+                .collect(Collectors.toMap(s -> (String) s.get("name"), s -> s.get("value")));
 
         if (operation.equals("waitForRequest")) {
-            String requestId = getRequestIdFromUrl((String) params.get(0).get("value"));
+            String requestId = getRequestIdFromUrl((String) params.get("request"));
             try {
-                apiClient.waitForRequest(requestId, 20000, 4000, 2000);
+                apiClient.waitForRequest(requestId, 80000, 4000, 2000);
                 System.out.print("{\"error\": null}");
             } catch (ApiException e) {
                 System.out.printf("{\"error\": \"%s\"}", e.getMessage());
             }
         } else {
-            Set<Class<? extends Object>> classSet = getAccessibleMethods("com.ionossdk.api");
+            Set<Class<? extends Object>> classSet = getAccessibleMethods("com.ionoscloud.api");
 
             for (Class apiClass : classSet) {
                 for (Method method : apiClass.getMethods()) {
@@ -65,7 +73,7 @@ public class Main {
                         /**
                          * GET parameter list for api call
                          */
-                        Object[] prm = getParapeterList(method, params);
+                        Object[] prm = getParameterList(method, params);
 
                         /**
                          * Perform api call
@@ -80,35 +88,43 @@ public class Main {
     public static void performRequest(ApiClient apiClient, Class apiClass, Method method, Object[] prm) throws IOException {
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         try {
+
             ApiResponse<Object> apiResponse =
                     (ApiResponse<Object>) method.invoke(
-                            apiClass.getDeclaredConstructor(
-                                    new Class[]{ApiClient.class}
-                            ).newInstance(apiClient),
-                            prm
+                        apiClass.getDeclaredConstructor(
+                                new Class[]{ApiClient.class}
+                        ).newInstance(apiClient),
+                        prm
                     );
 
-            /**
-             * set Location instead of location
-             */
             Map<String, List<String>> headers = apiResponse.getHeaders();
-            List<String> requestUrl = headers.get("location");
-            headers.remove("location");
-            headers.put("Location", requestUrl);
+            Map<String, List<String>> headersObject = new HashMap<>();
+            for (String header : headers.keySet()) {
+                headersObject.put(
+                        WordUtils
+                            .capitalize(header.replace('-', ' '))
+                            .replace(' ', '-'),
+                        headers.get(header)
+                );
+            }
 
+
+
+            Gson gson = new Gson();
             String json = ow.writeValueAsString(
                 new HashMap<String, Object>() {{
                     put("httpResponse", new HashMap<String, Object>() {{
                         put("statusCode", apiResponse.getStatusCode());
-                        put("headers", headers);
+                        put("headers", headersObject);
                     }});
-                    put("result", castEnumTypeToLowercaseString(apiResponse.getData()));
+                    put("result", gson.fromJson(gson.toJsonTree(apiResponse.getData()).toString(), HashMap.class));
                     put("error", null);
                 }}
             );
             System.out.print(json);
         } catch (Exception e) {
             Map httpResponse = new ObjectMapper().convertValue(e.getCause(), Map.class);
+
             if (httpResponse.containsKey("code")) {
                 httpResponse.put("statusCode", httpResponse.get("code"));
             }
@@ -123,20 +139,6 @@ public class Main {
         }
     }
 
-    public static Object castEnumTypeToLowercaseString(Object body) {
-        ObjectMapper oMapper = new ObjectMapper();
-        Map<String, Object> bodyAsMap = oMapper.convertValue(body, Map.class);
-        if (bodyAsMap == null) {
-            return body;
-        }
-        for (Object key : bodyAsMap.keySet()) {
-            if (key.equals("type")) {
-                bodyAsMap.put("type", bodyAsMap.get("type").toString().toLowerCase());
-            }
-        }
-        return bodyAsMap;
-    }
-
     public static String getRequestIdFromUrl(String url) {
         Pattern p = Pattern.compile("/([-A-Fa-f0-9]+)/");
         Matcher m = p.matcher(url);
@@ -146,33 +148,44 @@ public class Main {
         return null;
     }
 
-    public static Object[] getParapeterList(Method method, List<Map<String, Object>> params) {
+    public static Object[] getParameterList(Method method, Map<String, Object> testParams) {
+        Paranamer info = new CachingParanamer(new AnnotationParanamer(new BytecodeReadingParanamer()));
+        String[] methodParameterNames = info.lookupParameterNames(method);
+        Class[] methodParameterTypes = method.getParameterTypes();
+        Map<String, Class> methodParameterTypesMap = new HashMap<>();
 
-        Class[] parameterTypes = method.getParameterTypes();
+        int i = 0;
+        for (String pn : methodParameterNames) {
+            methodParameterTypesMap.put(pn, methodParameterTypes[i]);
+            i++;
+        }
+
         List<Object> paramList = new ArrayList<>();
 
-        List mandatoryDefaultParameters = new ArrayList<Object>(){{
-            add(true); // pretty
-            add(1); // depth
-            add(1); // contract number
-            add(0); // offset
-            add(100); // limit
-        }};
+        Gson gson = new Gson();
 
 
-        ObjectMapper om = new ObjectMapper();
 
-        for (int i=0; i<parameterTypes.length; i++) {
-            /**
-             * add parameters from test suite
-             * then default mandatory parameters
-             */
-            if (params.size() > i) {
-                Map<String, Object> param = params.get(i);
-                paramList.add(om.convertValue(param.get("value"), parameterTypes[i]));
+        for (String parameterName : methodParameterNames) {
+            if (testParams.containsKey(parameterName) || testParams.containsKey(StringUtils.capitalize(parameterName))) {
+                Object testParameter = testParams.get(parameterName) == null ?
+                        testParams.get(StringUtils.capitalize(parameterName)) : testParams.get(parameterName);
+                Class parameterType = methodParameterTypesMap.get(parameterName) == null ?
+                        methodParameterTypesMap.get(StringUtils.capitalize(parameterName)) :
+                        methodParameterTypesMap.get(parameterName);
+
+
+                if (testParameter instanceof Map || testParameter instanceof List) {
+                    paramList.add(gson.fromJson(
+                            gson.toJson(testParameter, testParameter.getClass()),
+                            parameterType
+                    ));
+                } else {
+                    paramList.add(testParameter);
+                }
+
             } else {
-                paramList.add(mandatoryDefaultParameters.get(0));
-                mandatoryDefaultParameters.remove(0);
+                paramList.add(null);
             }
         }
 

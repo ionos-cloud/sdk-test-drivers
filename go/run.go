@@ -121,10 +121,16 @@ func convertParamToArg(param interface{}, arg reflect.Type) (reflect.Value, erro
 
 	} else {
 		paramKind := reflect.TypeOf(param).Kind()
-		if paramKind != argKind {
-			return ret, errors.New(fmt.Sprintf("Needed %s arg but got %s", argKind, paramKind))
+		if paramKind == reflect.Float64 && argKind == reflect.Int32 {
+			/* test runner sends a float64,  method signature is generated with int32
+			 * honestly, this is as bad as it can get - I mean, really!? let's cramp 64 bits in, maybe they'll fit ... */
+			ret = reflect.ValueOf(int32(param.(float64)))
+		} else {
+			if paramKind != argKind {
+				return ret, errors.New(fmt.Sprintf("Needed %s arg but got %s", argKind, paramKind))
+			}
+			ret = reflect.ValueOf(param)
 		}
-		ret = reflect.ValueOf(param)
 	}
 
 	return ret, nil

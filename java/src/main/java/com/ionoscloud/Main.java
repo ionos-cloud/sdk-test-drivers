@@ -32,8 +32,6 @@ import java.util.stream.Collectors;
 
 public class Main {
 
-    final static String BASE_PATH = "https://api.ionos.com/cloudapi/v5";
-
     public static void main(String[] args) throws IOException, ClassCastException {
 
         /**
@@ -194,7 +192,6 @@ public class Main {
 
     public static ApiClient getApiClient() {
         ApiClient defaultClient = Configuration.getDefaultApiClient();
-        defaultClient.setBasePath(BASE_PATH);
 
         // Configure HTTP basic authorization: Basic Authentication
         HttpBasicAuth basicAuthentication = (HttpBasicAuth) defaultClient.getAuthentication("Basic Authentication");

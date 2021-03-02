@@ -60,8 +60,6 @@ begin
       total[current['name']] = current['value']
     end
 
-    special_params[:debug_auth_names] = ['Basic Authentication']
-
     response, status_code, headers = cls.new(api_client).public_send(
       method_name.to_sym,
       *normal_params,

@@ -57,7 +57,7 @@ begin
     normal_params = normal_params.map { |el| el['value'] }
 
     special_params = special_params.each_with_object({}) do |current, total|
-      total[current['name']] = current['value']
+      total[current['name'].to_sym] = current['value']
     end
 
     response, status_code, headers = cls.new(api_client).public_send(

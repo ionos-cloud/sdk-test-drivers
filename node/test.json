@@ -1,0 +1,24 @@
+{
+	"operation": "datacentersPost",
+	"params": [
+		{
+			"name": "datacenter",
+			"value": {
+
+					"name": "Node Test",
+					"description": "Created with the Node test driver",
+					"location": "de/fra"
+
+			}
+		},
+		{
+			"name": "pretty",
+			"value":"true"
+		},
+		{
+			"name": "depth",
+			"value":"10"
+		}
+
+	]
+}

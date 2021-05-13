@@ -25,7 +25,7 @@ if (password === undefined) {
 
   } catch(error) {
     if (error.response === undefined) {
-      output.error(error.message)
+      output.error(error.message, error.stack)
     } else {
       output.apiError(error.response)
     }

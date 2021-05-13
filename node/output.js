@@ -18,11 +18,12 @@ result: {}
  */
 
 module.exports = {
-  error: (msg, code = 1) => {
+  error: (msg, stack = {}, code = 1) => {
     process.stdout.write(JSON.stringify({
       error: {
         message: msg,
-        apiResponse: null
+        apiResponse: null,
+        stackTrace: stack
       },
       httpResponse: null,
       result: null

@@ -19,6 +19,8 @@ if (password === undefined) {
   try {
     const config = new sdk.Configuration({username, password});
 
+    config.setDepth(10).setPretty(true);
+
     const {operation, params} = await payload.parse()
     const response = await api.find(operation).run(config, params)
     output.success(response)

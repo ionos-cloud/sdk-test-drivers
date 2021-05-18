@@ -220,13 +220,19 @@ func callMethod(name string, method reflect.Value, args []reflect.Value, params 
 	var apiResponse *sdk.APIResponse
 	if responseLength == 3 {
 		output.Result = reflectRes[0].Interface()
-		apiResponse = reflectRes[1].Interface().(*sdk.APIResponse)
+		apiResponseVar := reflectRes[1].Interface()
+		if apiResponseVar != nil {
+			apiResponse = apiResponseVar.(*sdk.APIResponse)
+		}
 		callErr := reflectRes[2].Interface()
 		if callErr != nil {
 			output.Error = &ErrorStruct{Message: callErr.(error).Error()}
 		}
 	} else {
-		apiResponse = reflectRes[0].Interface().(*sdk.APIResponse)
+		apiResponseVar := reflectRes[0].Interface()
+		if apiResponseVar != nil {
+			apiResponse = apiResponseVar.(*sdk.APIResponse)
+		}
 		callErr := reflectRes[1].Interface()
 		if callErr != nil {
 			output.Error = &ErrorStruct{Message: callErr.(error).Error()}

@@ -216,7 +216,6 @@ func callMethod(name string, method reflect.Value, args []reflect.Value, params 
 
 	reflectRes := executeMethod.Call([]reflect.Value{})
 
-	/* assuming we always have result, *ApiResponse, error */
 	responseLength := len(reflectRes)
 	var apiResponse *sdk.APIResponse
 	if responseLength == 3 {

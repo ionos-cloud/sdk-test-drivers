@@ -218,7 +218,11 @@ func callMethod(name string, method reflect.Value, args []reflect.Value, params 
 
 	/* assuming we always have result, *ApiResponse, error */
 	output.Result = reflectRes[0].Interface()
-	apiResponse := reflectRes[1].Interface().(*sdk.APIResponse)
+	apiResponseVar := reflectRes[1].Interface()
+	var apiResponse *sdk.APIResponse
+	if apiResponseVar != nil {
+		apiResponse = apiResponseVar.(*sdk.APIResponse)
+	}
 	callErr := reflectRes[2].Interface()
 	if callErr != nil {
 		output.Error = &ErrorStruct{Message: callErr.(error).Error()}
@@ -238,7 +242,11 @@ func callMethod(name string, method reflect.Value, args []reflect.Value, params 
 func callWaitForRequest(method reflect.Value, args []reflect.Value, output *Output) {
 	reflectRes := method.Call(args)
 	/* assuming we always have result, *ApiResponse, error */
-	apiResponse := reflectRes[0].Interface().(*sdk.APIResponse)
+	apiResponseVar := reflectRes[0].Interface()
+	var apiResponse *sdk.APIResponse
+	if apiResponseVar != nil {
+		apiResponse = apiResponseVar.(*sdk.APIResponse)
+	}
 	callErr := reflectRes[1].Interface()
 	if callErr != nil {
 		output.Error = &ErrorStruct{Message: callErr.(error).Error()}

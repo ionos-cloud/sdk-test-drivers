@@ -216,16 +216,27 @@ func callMethod(name string, method reflect.Value, args []reflect.Value, params 
 
 	reflectRes := executeMethod.Call([]reflect.Value{})
 
-	/* assuming we always have result, *ApiResponse, error */
-	output.Result = reflectRes[0].Interface()
-	apiResponseVar := reflectRes[1].Interface()
+	responseLength := len(reflectRes)
 	var apiResponse *sdk.APIResponse
-	if apiResponseVar != nil {
-		apiResponse = apiResponseVar.(*sdk.APIResponse)
-	}
-	callErr := reflectRes[2].Interface()
-	if callErr != nil {
-		output.Error = &ErrorStruct{Message: callErr.(error).Error()}
+	if responseLength == 3 {
+		output.Result = reflectRes[0].Interface()
+		apiResponseVar := reflectRes[1].Interface()
+		if apiResponseVar != nil {
+			apiResponse = apiResponseVar.(*sdk.APIResponse)
+		}
+		callErr := reflectRes[2].Interface()
+		if callErr != nil {
+			output.Error = &ErrorStruct{Message: callErr.(error).Error()}
+		}
+	} else {
+		apiResponseVar := reflectRes[0].Interface()
+		if apiResponseVar != nil {
+			apiResponse = apiResponseVar.(*sdk.APIResponse)
+		}
+		callErr := reflectRes[1].Interface()
+		if callErr != nil {
+			output.Error = &ErrorStruct{Message: callErr.(error).Error()}
+		}
 	}
 	if apiResponse != nil && apiResponse.Response != nil {
 		output.HttpResponse = HttpResponse{

@@ -7,8 +7,5 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "@ionos-cloud/sdk-nodejs": "^5.0.0"
-  }
+  "license": "ISC"
 }

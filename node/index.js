@@ -1,4 +1,4 @@
-const sdk = require('@ionos-cloud/sdk-node')
+const sdk = require('@ionos-cloud/sdk-nodejs')
 const output = require('./output')
 const payload = require('./payload')
 const api = require('./api')

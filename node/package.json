@@ -1,7 +1,7 @@
 {
   "name": "node-test-driver",
   "version": "1.0.0",
-  "description": "",
+  "description": "Ionos Cloud NodeJS SDK Test Driver",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -9,6 +9,6 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@ionos-cloud/sdk-node": "^5.0.0"
+    "@ionos-cloud/sdk-nodejs": "^5.0.0"
   }
 }

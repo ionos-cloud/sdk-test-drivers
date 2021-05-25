@@ -20,7 +20,7 @@ result: {}
 
 module.exports = {
   error: (msg, stack = {}, code = 1) => {
-    fs.writeSync(fs.openSync('/dev/stdout', 'w'), JSON.stringify({
+    fs.writeSync(1, JSON.stringify({
       error: {
         message: msg,
         apiResponse: null,
@@ -49,7 +49,7 @@ module.exports = {
      * ensure stdout is blocking and node wont exit before all output is flushed as it
      * does when using process.stdout.write, trimming the output to 8k.
      */
-    fs.writeSync(fs.openSync('/dev/stdout', 'w'), JSON.stringify({
+    fs.writeSync(1, JSON.stringify({
       error: {
         message,
         apiResponse: {
@@ -69,7 +69,7 @@ module.exports = {
   },
 
   success: (response) => {
-    fs.writeSync(fs.openSync('/dev/stdout', 'w'),
+    fs.writeSync(1,
       JSON.stringify({
         error: null,
         httpResponse: {

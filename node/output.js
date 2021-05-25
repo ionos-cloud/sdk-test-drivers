@@ -1,3 +1,4 @@
+const fs = require('fs');
 const INDENT = 2
 
 /*
@@ -19,7 +20,7 @@ result: {}
 
 module.exports = {
   error: (msg, stack = {}, code = 1) => {
-    process.stdout.write(JSON.stringify({
+    fs.writeFileSync(fs.openSync('/dev/stdout', 'w'), JSON.stringify({
       error: {
         message: msg,
         apiResponse: null,
@@ -44,7 +45,11 @@ module.exports = {
       message = 'API Error'
     }
 
-    process.stdout.write(JSON.stringify({
+    /* using fs.writeFileSync with fs.openSync instead of process.stdout.write to
+     * ensure stdout is blocking and node wont exit before all output is flushed as it
+     * does when using process.stdout.write, trimming the output to 8k.
+     */
+    fs.writeFileSync(fs.openSync('/dev/stdout', 'w'), JSON.stringify({
       error: {
         message,
         apiResponse: {
@@ -60,19 +65,21 @@ module.exports = {
       },
       result: response.data
     }))
-    process.exit(1)
+    process.exit(0)
   },
 
   success: (response) => {
-    process.stdout.write(JSON.stringify({
-      error: null,
-      httpResponse: {
-        statusCode: response.status,
-        headers: response.headers,
-        body: response.data
-      },
-      result: response.data
-    }))
+    fs.writeFileSync(fs.openSync('/dev/stdout', 'w'),
+      JSON.stringify({
+        error: null,
+        httpResponse: {
+          statusCode: response.status,
+          headers: response.headers,
+          body: response.data
+        },
+        result: response.data
+      })
+    )
     process.exit(0)
   }
 

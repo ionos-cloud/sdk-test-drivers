@@ -1,5 +1,4 @@
 const sdk = require('@ionos-cloud/sdk-nodejs')
-const utils = require('./utils')
 
 const WAIT_FOR_REQUEST_OP = 'waitForRequest'
 

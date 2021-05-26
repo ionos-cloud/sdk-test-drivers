@@ -80,7 +80,6 @@ module.exports = {
         result: response.data
       })
     )
-    process.exit(0)
   }
 
 }

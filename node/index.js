@@ -15,21 +15,23 @@ if (password === undefined) {
 }
 
 
-try {
-  const config = new sdk.Configuration({username, password});
+(async function () {
+  try {
+    const config = new sdk.Configuration({username, password});
 
-  config.setDepth(10).setPretty(true);
+    config.setDepth(10).setPretty(true);
 
-  const {operation, params} = await payload.parse()
-  const response = await api.find(operation).run(config, params)
-  output.success(response)
+    const {operation, params} = await payload.parse()
+    const response = await api.find(operation).run(config, params)
+    output.success(response)
 
-} catch(error) {
-  if (error.response === undefined) {
-    output.error(error.message, error.stack)
-  } else {
-    output.apiError(error.response)
+  } catch (error) {
+    if (error.response === undefined) {
+      output.error(error.message, error.stack)
+    } else {
+      output.apiError(error.response)
+    }
   }
-}
+})()
 
 

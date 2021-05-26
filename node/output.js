@@ -1,6 +1,3 @@
-const fs = require('fs');
-const INDENT = 2
-
 /*
 error: {
   message: '',
@@ -18,9 +15,12 @@ httpResponse: {
 result: {}
  */
 
+const DRAIN_TIMEOUT = 200
+
 module.exports = {
-  error: (msg, stack = {}, code = 1) => {
-    fs.writeSync(1, JSON.stringify({
+  error: async (msg, stack = {}, code = 1) => {
+    let drained = false
+    process.stdout.write(JSON.stringify({
       error: {
         message: msg,
         apiResponse: null,
@@ -28,13 +28,18 @@ module.exports = {
       },
       httpResponse: null,
       result: null
-    }))
+    }), () => { drained = true })
+
+    do {
+      await new Promise((res, _) => setTimeout(res, DRAIN_TIMEOUT))
+    } while (drained === false)
+
     process.exit(code)
   },
 
-  apiError: (response, code = 1) => {
+  apiError: async (response) => {
 
-    let message = ''
+    let message
     if (response.data.messages !== undefined) {
       if (response.data.messages.length === 1) {
         message = response.data.messages[0].message
@@ -45,11 +50,8 @@ module.exports = {
       message = 'API Error'
     }
 
-    /* using fs.writeFileSync with fs.openSync instead of process.stdout.write to
-     * ensure stdout is blocking and node wont exit before all output is flushed as it
-     * does when using process.stdout.write, trimming the output to 8k.
-     */
-    fs.writeSync(1, JSON.stringify({
+    let drained = false
+    process.stdout.write(JSON.stringify({
       error: {
         message,
         apiResponse: {
@@ -64,12 +66,17 @@ module.exports = {
         body: response.data
       },
       result: response.data
-    }))
-    process.exit(0)
+    }), () => { drained = true })
+
+    do {
+      await new Promise((res, _) => setTimeout(res, DRAIN_TIMEOUT))
+    } while (drained === false)
+
   },
 
-  success: (response) => {
-    fs.writeSync(1,
+  success: async (response) => {
+    let drained = false
+    process.stdout.write(
       JSON.stringify({
         error: null,
         httpResponse: {
@@ -78,8 +85,12 @@ module.exports = {
           body: response.data
         },
         result: response.data
-      })
+      }), () => { drained = true }
     )
+
+    do {
+      await new Promise((res, _) => setTimeout(res, DRAIN_TIMEOUT))
+    } while (drained === false)
   }
 
 }

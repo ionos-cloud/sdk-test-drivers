@@ -29,7 +29,7 @@ class Api {
   }
 
   async runWaitForRequest(config, params) {
-    const requestParam = params.find(p => p.name === 'request')
+    const requestParam = params.find(p => p.name.toLowerCase() === 'request')
     if (requestParam === undefined) {
       throw new Error('"request" parameter not provided for waitForRequest')
     }
@@ -55,6 +55,8 @@ class Api {
      */
     const requestParams = {}
     for (const param of params) {
+      /* lower case first letter */
+      param.name = `${param.name[0].toLowerCase()}${param.name.substr(1)}`
       requestParams[param.name] = param.value
     }
     return await method.call(apiInstance, requestParams)

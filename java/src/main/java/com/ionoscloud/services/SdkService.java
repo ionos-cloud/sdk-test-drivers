@@ -2,6 +2,7 @@ package com.ionoscloud.services;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import com.ionoscloud.ApiClient;
 import com.ionoscloud.ApiException;
 import com.ionoscloud.ApiResponse;
@@ -164,9 +165,20 @@ public class SdkService {
         }
 
 
+        Gson gson = new Gson();
+
+        /* We're still using gson here to serialize the structure returned by the sdk because
+         * the sdk is generated using gson and when serializing via jackson, the json adapter is not used
+         * and enums are serialized in caps instead of using the lowercase values, which is not good.
+         * However, this doesn't hurt since we were actually interested in using jackson to parse the input
+         * payload that gets deserialized into sdk structures and use setters and getters there.
+         */
+        var resultMap = gson.fromJson(gson.toJsonTree(apiResponse.getData()).toString(), HashMap.class);
+
         return Response
                 .builder()
-                .result(apiResponse.getData())
+                .result(resultMap)
+                // .result(apiResponse.getData()) - we could've done this if jackson was used by openapi generator
                 .httpResponse(
                         HttpResponse
                                 .builder()

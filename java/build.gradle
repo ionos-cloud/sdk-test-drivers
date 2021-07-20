@@ -5,7 +5,7 @@ plugins {
 task fatJar(type: Jar) {
     manifest {
         attributes 'Implementation-Title': 'SDK Test Driver',
-                'Implementation-Version': 0.0,
+                'Implementation-Version': 1.0,
                 'Main-Class': 'com.ionoscloud.Main'
     }
     from {
@@ -17,18 +17,30 @@ task fatJar(type: Jar) {
 
 group 'com.ionoscloud'
 
-sourceCompatibility = 1.8
+sourceCompatibility = 1.11
 
 repositories {
     mavenLocal()
     mavenCentral()
 }
+
 def sdkVersion = project.getProperties().get("sdkVersion")
+
 dependencies {
     implementation "com.thoughtworks.paranamer:paranamer:2.8"
     implementation "com.ionoscloud:ionos-cloud-sdk:${sdkVersion}"
     implementation "org.reflections:reflections:0.9.11"
     implementation "com.fasterxml.jackson.core:jackson-databind:2.11.3"
     implementation 'org.apache.commons:commons-text:1.9'
+
+    implementation 'org.hibernate.validator:hibernate-validator:7.0.1.Final'
+    implementation 'org.glassfish:jakarta.el:4.0.0'
+
+    compileOnly 'org.projectlombok:lombok:1.18.20'
+    annotationProcessor 'org.projectlombok:lombok:1.18.20'
+
+    testCompileOnly 'org.projectlombok:lombok:1.18.20'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.20'
+
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }

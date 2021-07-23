@@ -27,7 +27,7 @@ if [ "${core_lib_path}" = "" ]; then
 	usage "path to core lib not specified"
 fi
 
-github_lib_path="${4-"github.com/ionos-cloud/sdk-go/v5"}"
+github_lib_path="${4:-"github.com/ionos-cloud/sdk-go/v5"}"
 
 # replace core lib version
 # NOTE: THIS RUNS ON LINUX ONLY - DOESN'T WORK ON OSX - on OSX the -i flag requires an extension name to save backups to

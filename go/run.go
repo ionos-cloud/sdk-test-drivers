@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	sdk "github.com/ionos-cloud/sdk-go/v5"
+	sdk "github.com/ionos-cloud/sdk-go/v6"
 	"github.com/mitchellh/mapstructure"
 	"net/http"
 	"os"

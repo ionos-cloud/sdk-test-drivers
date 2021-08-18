@@ -44,7 +44,9 @@ if __name__ == "__main__":
     try:
         if operation == 'waitForRequest':
             request_id = re.search('/requests/([-A-Fa-f0-9]+)/', params['request']).group(1)
-            api_client.wait_for_completion(request_id)
+            wait_for_completion = getattr(api_client, "wait_for_completion", None)
+            if callable(wait_for_completion):
+                api_client.wait_for_completion(request_id)
             sys.stdout.write(json.dumps({}))
         else:
             classApi, method = get_class_and_method(operation)

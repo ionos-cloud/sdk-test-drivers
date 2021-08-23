@@ -13,10 +13,10 @@ import java.util.stream.Collectors;
 public class Main {
 
 
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) {
 
         /* Initialize ApiClient */
-        var sdkService = new SdkService();
+        SdkService sdkService = new SdkService();
 
         try {
 
@@ -29,7 +29,7 @@ public class Main {
 
         } catch (Throwable e) {
 
-            var errorBuilder =
+            Error.ErrorBuilder errorBuilder =
                     Error
                     .builder()
                     .message(e.getMessage())
@@ -38,7 +38,7 @@ public class Main {
                     ).collect(Collectors.toList()));
 
             if (e instanceof ApiException) {
-                var apiEx = (ApiException) e;
+                ApiException apiEx = (ApiException) e;
                 errorBuilder.apiResponse(
                         HttpResponse
                                 .builder()

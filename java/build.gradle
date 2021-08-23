@@ -17,7 +17,7 @@ task fatJar(type: Jar) {
 
 group 'com.ionoscloud'
 
-sourceCompatibility = 1.11
+sourceCompatibility = 1.8
 
 repositories {
     mavenLocal()

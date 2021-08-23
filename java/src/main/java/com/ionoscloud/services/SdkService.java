@@ -23,7 +23,6 @@ import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -40,13 +39,13 @@ public class SdkService {
 
     public SdkService() {
 
-        var username = System.getenv("IONOS_USERNAME");
+        String username = System.getenv("IONOS_USERNAME");
 
         if (username == null || username.trim().length() == 0) {
             throw new IllegalArgumentException("IONOS_USERNAME env var not set");
         }
 
-        var password = System.getenv("IONOS_PASSWORD");
+        String password = System.getenv("IONOS_PASSWORD");
 
         if (password == null || password.trim().length() == 0) {
             throw new IllegalArgumentException("IONOS_PASSWORD env var not set");
@@ -62,9 +61,9 @@ public class SdkService {
 
     public Response run(Input input)
             throws Throwable {
-        var operation  = input.getOperation();
-        var params = input.getParams();
 
+        String operation  = input.getOperation();
+        List<Param> params = input.getParams();
 
         if (operation.equals("waitForRequest")) {
             return this.waitForRequest(input);
@@ -124,10 +123,10 @@ public class SdkService {
             }
 
         } catch (InvocationTargetException e) {
-            var target = e.getTargetException();
+            Throwable target = e.getTargetException();
             if (target instanceof ApiException) {
-                var apiEx = (ApiException)target;
-                var httpResponse = HttpResponse
+                ApiException apiEx = (ApiException)target;
+                HttpResponse httpResponse = HttpResponse
                         .builder()
                         .body(apiEx.getResponseBody())
                         .headers(apiEx.getResponseHeaders())
@@ -173,7 +172,7 @@ public class SdkService {
          * However, this doesn't hurt since we were actually interested in using jackson to parse the input
          * payload that gets deserialized into sdk structures and use setters and getters there.
          */
-        var resultMap = gson.fromJson(gson.toJsonTree(apiResponse.getData()).toString(), HashMap.class);
+        HashMap<?, ?> resultMap = gson.fromJson(gson.toJsonTree(apiResponse.getData()).toString(), HashMap.class);
 
         return Response
                 .builder()
@@ -220,7 +219,7 @@ public class SdkService {
 
         List<Object> paramList = new ArrayList<>();
 
-        var mapper = new ObjectMapper();
+        ObjectMapper mapper = new ObjectMapper();
         mapper.setVisibility(mapper.getSerializationConfig().getDefaultVisibilityChecker()
                 .withFieldVisibility(JsonAutoDetect.Visibility.NONE)
                 .withGetterVisibility(JsonAutoDetect.Visibility.ANY)
@@ -263,7 +262,7 @@ public class SdkService {
     protected String getRequestIdFromUrl(String url) {
 
         /* we assume a request url is of the form https://api.host/REQUESTID/status */
-        var parts = url.split("/");
+        String[] parts = url.split("/");
         if (parts.length < 2) {
             throw new IllegalArgumentException("invalid request URL: " + url);
         }

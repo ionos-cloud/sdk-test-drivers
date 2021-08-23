@@ -50,7 +50,7 @@ public class Input {
         }
 
         StringBuilder errorBuilder = new StringBuilder("invalid input: ");
-        for (var violation: violations) {
+        for (ConstraintViolation<Input> violation: violations) {
             errorBuilder.append(violation.getMessage());
             errorBuilder.append("; ");
         }

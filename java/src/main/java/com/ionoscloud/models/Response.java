@@ -13,7 +13,7 @@ public class Response {
     Object result;
 
     public String toString() {
-        var objectMapper = new ObjectMapper();
+        ObjectMapper objectMapper = new ObjectMapper();
 
         try {
             return objectMapper.writeValueAsString(this);

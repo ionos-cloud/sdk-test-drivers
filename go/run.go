@@ -95,11 +95,12 @@ func convertParamToArg(param interface{}, arg reflect.Type) (reflect.Value, erro
 			var parsedTime time.Time
 			parsedTime, errDecode = time.Parse(time.RFC3339, param.(string))
 			if errDecode != nil {
-				return reflect.ValueOf(nil), errors.New(fmt.Sprintf("Could not parse time parameter %s", argTypeName))
+				return reflect.ValueOf(nil), errors.New(fmt.Sprintf("could not parse time parameter %s: %s", argTypeName, errDecode))
 			}
 			ret = reflect.ValueOf(parsedTime)
 			return ret, nil
-		} else if reflect.TypeOf(param).Kind() != reflect.Map {
+		}
+		if reflect.TypeOf(param).Kind() != reflect.Map {
 			return reflect.ValueOf(nil), errors.New(fmt.Sprintf("param expected to be a map for type %s", argTypeName))
 		}
 

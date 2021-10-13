@@ -11,7 +11,8 @@ import (
 	"net/http"
 	"os"
 	"reflect"
-	"strings"
+	"strings",
+	"time"
 )
 
 type Options struct {
@@ -90,8 +91,15 @@ func convertParamToArg(param interface{}, arg reflect.Type) (reflect.Value, erro
 		var errDecode error
 		var decoder *mapstructure.Decoder
 
-		/* map the params map to struct */
-		if reflect.TypeOf(param).Kind() != reflect.Map {
+		if argKind == reflect.TypeOf(time.Time{}).Kind() {
+			var parsedTime time.Time
+			parsedTime, errDecode = time.Parse(time.RFC3339, param.(string))
+			if errDecode != nil {
+				return reflect.ValueOf(nil), errors.New(fmt.Sprintf("Could not parse time parameter %s", argTypeName))
+			}
+			ret = reflect.ValueOf(parsedTime)
+			return ret, nil
+		} else if reflect.TypeOf(param).Kind() != reflect.Map {
 			return reflect.ValueOf(nil), errors.New(fmt.Sprintf("param expected to be a map for type %s", argTypeName))
 		}
 

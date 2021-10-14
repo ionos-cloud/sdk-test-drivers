@@ -16,39 +16,38 @@ import (
 )
 
 type Options struct {
-	Username 	*string				`json:"username,omitempty"`
-	Password 	*string				`json:"password,omitempty"`
-	Timeout 	*int64				`json:"timeout,omitempty"`
+	Username *string `json:"username,omitempty"`
+	Password *string `json:"password,omitempty"`
+	Timeout  *int64  `json:"timeout,omitempty"`
 }
 
 type InputParam struct {
-	Name string						`json:"name,omitempty"`
-	Value interface{}				`json:"value,omitempty"`
-	Processed bool					`json:"-"`
+	Name      string      `json:"name,omitempty"`
+	Value     interface{} `json:"value,omitempty"`
+	Processed bool        `json:"-"`
 }
 
 type Input struct {
-	Operation 	string 				`json:"operation,omitempty"`
-	Params 		[]InputParam		`json:"params,omitempty"`
-	Options 	*Options			`json:"options,omitempty"`
-
+	Operation string       `json:"operation,omitempty"`
+	Params    []InputParam `json:"params,omitempty"`
+	Options   *Options     `json:"options,omitempty"`
 }
 
 type HttpResponse struct {
-	StatusCode	int					`json:"statusCode"`
-	Headers		http.Header			`json:"headers"`
-	Body		string				`json:"body"`
+	StatusCode int         `json:"statusCode"`
+	Headers    http.Header `json:"headers"`
+	Body       string      `json:"body"`
 }
 
 type Output struct {
-	Error 			*ErrorStruct	`json:"error,omitempty"`
-	HttpResponse	HttpResponse	`json:"httpResponse"`
-	Result			interface{}		`json:"result"`
+	Error        *ErrorStruct `json:"error,omitempty"`
+	HttpResponse HttpResponse `json:"httpResponse"`
+	Result       interface{}  `json:"result"`
 }
 
 type ErrorStruct struct {
-	Message string					`json:"message,omitempty"`
-	ApiResponse *HttpResponse		`json:"apiResponse"`
+	Message     string        `json:"message,omitempty"`
+	ApiResponse *HttpResponse `json:"apiResponse"`
 }
 
 const (
@@ -58,7 +57,7 @@ const (
 func getDecoder(result interface{}) (*mapstructure.Decoder, error) {
 	var decoderConfig = &mapstructure.DecoderConfig{
 		ErrorUnused: true,
-		Result: result,
+		Result:      result,
 	}
 	return mapstructure.NewDecoder(decoderConfig)
 }
@@ -91,7 +90,7 @@ func convertParamToArg(param interface{}, arg reflect.Type) (reflect.Value, erro
 		var errDecode error
 		var decoder *mapstructure.Decoder
 
-		if argKind == reflect.TypeOf(time.Time{}).Kind() {
+		if argTypeName == reflect.TypeOf(time.Time{}).Name() {
 			var parsedTime time.Time
 			parsedTime, errDecode = time.Parse(time.RFC3339, param.(string))
 			if errDecode != nil {
@@ -153,13 +152,13 @@ func computeMethodArgs(methodFromVal reflect.Value, params []InputParam, output 
 	/* skipping first arg, we now it to always be context */
 	args[0] = reflect.ValueOf(context.TODO())
 
-	if len(params) < numArgs - 1 {
-		output.Error = &ErrorStruct{Message: fmt.Sprintf("too few params; found %d, expected %d", len(params), numArgs - 1)}
+	if len(params) < numArgs-1 {
+		output.Error = &ErrorStruct{Message: fmt.Sprintf("too few params; found %d, expected %d", len(params), numArgs-1)}
 		return args
 	}
 
 	/* initialize args */
-	for j := 1; j < methodFromVal.Type().NumIn(); j ++ {
+	for j := 1; j < methodFromVal.Type().NumIn(); j++ {
 
 		arg := methodFromVal.Type().In(j)
 		args[j] = reflect.Zero(arg)
@@ -171,13 +170,13 @@ func computeMethodArgs(methodFromVal reflect.Value, params []InputParam, output 
 
 		argReflectVal, err := convertParamToArg(inputArg, arg)
 		if err != nil {
-			output.Error = &ErrorStruct{Message: fmt.Sprintf("param #%d: %s", j - 1, err.Error())}
+			output.Error = &ErrorStruct{Message: fmt.Sprintf("param #%d: %s", j-1, err.Error())}
 			return args
 		}
 
 		args[j] = argReflectVal
 
-		params[j - 1].Processed = true
+		params[j-1].Processed = true
 	}
 
 	return args

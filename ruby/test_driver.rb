@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 
+
 $LOAD_PATH << '.'
 
 require 'json'
@@ -18,6 +19,16 @@ def underscore_string(str)
      .gsub(/([a-z\d])([A-Z])/, '\1_\2')
      .tr('-', '_')
      .downcase
+end
+
+def underscore_keys(hash)
+  hash.transform_keys! { |key| underscore_string(key.to_s).to_sym}
+  hash.each_key do
+    |key|
+    underscore_keys(hash[key]) if hash[key].is_a?(Hash)
+      hash[key].each { |el| underscore_keys(el) } if hash[key].is_a?(Array)
+  end
+  hash
 end
 
 def get_class(operation)
@@ -46,15 +57,22 @@ begin
 
     cls = get_class method_name
 
-    special_params_names = %w[pretty depth XContractNumber contractNumber offset limit]
+    special_params_names = %w[pretty depth XContractNumber contractNumber offset limit start end]
 
-    normal_params, special_params = testing_data['params'].partition do |el|
+    normal_params, special_params = testing_data['params'].nil? ? [[], []] : testing_data['params'].partition do |el|
       special_params_names.none? do |special_param_name|
         special_param_name == el['name']
       end
     end
 
-    normal_params = normal_params.map { |el| el['value'] }
+    normal_params = normal_params.map do |el|
+      el['name'][0].capitalize!
+      begin
+        Ionoscloud.const_get(el['name']).new._deserialize(el['name'], underscore_keys(el['value']))
+      rescue NameError
+        el['value']
+      end
+    end
 
     special_params = special_params.each_with_object({}) do |current, total|
       total[current['name'].to_sym] = current['value']
@@ -66,7 +84,10 @@ begin
       special_params
     )
 
-    response = response.to_hash unless response.nil?
+    begin 
+      response = response.to_hash unless response.nil?
+    rescue NoMethodError
+    end
 
     headers = headers.transform_values do |value|
       value.split(',', -1)

@@ -1,4 +1,4 @@
-const sdk = require(process.env['IONOS_SDK_NAME'])
+const sdk = require('@ionos-cloud/' + process.env['IONOS_SDK_NAME'])
 const output = require('./output')
 const payload = require('./payload')
 const api = require('./api')
@@ -10,7 +10,7 @@ async function run() {
   if (sdk === undefined) {
     await output.error('IONOS_SDK_NAME env variable not found')
   }
-  
+
   if (username === undefined) {
     await output.error('IONOS_USERNAME env variable not found')
   }

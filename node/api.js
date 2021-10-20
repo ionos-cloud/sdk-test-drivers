@@ -1,4 +1,4 @@
-const sdk = require(process.env['IONOS_SDK_NAME'])
+const sdk = require('@ionos-cloud/'+process.env['IONOS_SDK_NAME'])
 
 const WAIT_FOR_REQUEST_OP = 'waitForRequest'
 

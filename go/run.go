@@ -197,17 +197,41 @@ func callMethod(name string, method reflect.Value, args []reflect.Value, params 
 		if param.Processed {
 			continue
 		}
-
-		/* find the method associated with this param */
-		builderMethod := objectRes[0].MethodByName(strings.Title(param.Name))
-		if builderMethod.IsValid() {
-			reflectArg, err := convertParamToArg(param.Value, builderMethod.Type().In(0))
-			if err != nil {
-				output.Error = &ErrorStruct{Message: err.Error()}
-				return
+		// Find the method associated for filter parameters: "filter.name=VALUE"
+		if strings.Contains(param.Name, "filter.") {
+			paramTitles := strings.Split(param.Name, ".")
+			builderMethod := objectRes[0].MethodByName(strings.Title(paramTitles[0]))
+			if builderMethod.IsValid() {
+				var reflectArgs []reflect.Value
+				for i := 0; i < builderMethod.Type().NumIn(); i++ {
+					var argIn interface{}
+					if i == 0 {
+						argIn = paramTitles[1]
+					} else {
+						argIn = param.Value
+					}
+					reflectArg, err := convertParamToArg(argIn, builderMethod.Type().In(i))
+					if err != nil {
+						output.Error = &ErrorStruct{Message: err.Error()}
+						return
+					}
+					reflectArgs = append(reflectArgs, reflectArg)
+				}
+				objectRes = builderMethod.Call(reflectArgs)
+				param.Processed = true
 			}
-			objectRes = builderMethod.Call([]reflect.Value{reflectArg})
-			param.Processed = true
+		} else {
+			/* find the method associated with this param */
+			builderMethod := objectRes[0].MethodByName(strings.Title(param.Name))
+			if builderMethod.IsValid() {
+				reflectArg, err := convertParamToArg(param.Value, builderMethod.Type().In(0))
+				if err != nil {
+					output.Error = &ErrorStruct{Message: err.Error()}
+					return
+				}
+				objectRes = builderMethod.Call([]reflect.Value{reflectArg})
+				param.Processed = true
+			}
 		}
 
 		if !param.Processed {

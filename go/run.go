@@ -191,34 +191,44 @@ func callMethod(name string, method reflect.Value, args []reflect.Value, params 
 		output.Error = &ErrorStruct{Message: fmt.Sprintf("Method %s didn't return anything", name)}
 		return
 	}
-
 	/* we set any unprocessed params by calling the appropriate builder methods */
 	for _, param := range params {
 		if param.Processed {
 			continue
 		}
-		// Find the method associated for filter parameters: "filter.name=VALUE"
-		if strings.Contains(param.Name, "filter.") {
-			paramTitles := strings.Split(param.Name, ".")
-			builderMethod := objectRes[0].MethodByName(strings.Title(paramTitles[0]))
-			if builderMethod.IsValid() {
-				var reflectArgs []reflect.Value
-				for i := 0; i < builderMethod.Type().NumIn(); i++ {
-					var argIn interface{}
-					if i == 0 {
-						argIn = paramTitles[1]
-					} else {
-						argIn = param.Value
+
+		// Parse filters parameters into: "filter.<property>=VALUE"
+		if strings.Compare(param.Name, "filters") == 0 {
+			// For filters parameter set in tests, use Filter as
+			// builderMethod with key & value as input arguments.
+			builderMethod := objectRes[0].MethodByName(strings.Title("filter"))
+			if builderMethod.IsValid() && builderMethod.Type().NumIn() == 2 {
+				kv := reflect.ValueOf(param.Value)
+				if kv.Kind() == reflect.Map {
+					for _, key := range kv.MapKeys() {
+						v := kv.MapIndex(key)
+						reflectArgFilter, err := convertParamToArg(key.String(), builderMethod.Type().In(0))
+						if err != nil {
+							output.Error = &ErrorStruct{Message: err.Error()}
+							return
+						}
+						reflectArgValue, err := convertParamToArg(v.Interface().(string), builderMethod.Type().In(1))
+						if err != nil {
+							output.Error = &ErrorStruct{Message: err.Error()}
+							return
+						}
+						objectRes = builderMethod.Call([]reflect.Value{reflectArgFilter, reflectArgValue})
 					}
-					reflectArg, err := convertParamToArg(argIn, builderMethod.Type().In(i))
-					if err != nil {
-						output.Error = &ErrorStruct{Message: err.Error()}
-						return
-					}
-					reflectArgs = append(reflectArgs, reflectArg)
+					// The filters param is marked as Processed after the
+					// builderMethod is called for each key&value from map.
+					param.Processed = true
+				} else {
+					output.Error = &ErrorStruct{Message: "no valid value param for filter query param"}
+					return
 				}
-				objectRes = builderMethod.Call(reflectArgs)
-				param.Processed = true
+			} else {
+				output.Error = &ErrorStruct{Message: "no valid builder method for filter query param"}
+				return
 			}
 		} else {
 			/* find the method associated with this param */

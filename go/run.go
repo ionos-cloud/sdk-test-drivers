@@ -370,7 +370,7 @@ func main() {
 		password = os.Getenv("IONOS_PASSWORD")
 	}
 
-	client := sdk.NewAPIClient(sdk.NewConfiguration(username, password, ""))
+	client := sdk.NewAPIClient(sdk.NewConfiguration(username, password, "", ""))
 
 	operation := strings.Title(strings.TrimSpace(input.Operation))
 	if operation == "" {

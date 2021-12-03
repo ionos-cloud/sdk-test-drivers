@@ -39,7 +39,7 @@ if __name__ == "__main__":
     testing_data = json.loads(input[0])
 
     operation = testing_data['operation']
-    params = {re.sub(r'(?<!^)(?=[A-Z])', '_', p['name']).lower(): p['value'] for p in testing_data['params']}
+    params = {re.sub(r'(?<!^)(?=[A-Z])', '_', p['name']).lower(): p['value'] for p in testing_data.get('params', [])}
 
     try:
         if operation == 'waitForRequest':

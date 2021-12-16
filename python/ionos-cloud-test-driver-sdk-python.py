@@ -2,7 +2,10 @@
 
 import sys
 import json
-import ionoscloud
+try:
+  import ionoscloud
+except ImportError:
+  import ionoscloud_autoscaling as ionscloud
 import re
 import os
 

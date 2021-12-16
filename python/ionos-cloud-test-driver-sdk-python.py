@@ -5,7 +5,7 @@ import json
 try:
   import ionoscloud
 except ImportError:
-  import ionoscloud_autoscaling as ionscloud
+  import ionoscloud_autoscaling as ionoscloud
 import re
 import os
 

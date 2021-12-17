@@ -3,7 +3,13 @@
 $LOAD_PATH << '.'
 
 require 'json'
-require 'ionoscloud'
+
+begin
+  require 'ionoscloud'
+rescue LoadError
+  require 'ionoscloud-autoscaling'
+  Ionoscloud = IonoscloudAutoscaling
+end
 
 config = Ionoscloud::Configuration.new
 

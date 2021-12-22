@@ -6,13 +6,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	sdk "github.com/ionos-cloud/sdk-go/v5"
-	"github.com/mitchellh/mapstructure"
 	"net/http"
 	"os"
 	"reflect"
 	"strings"
 	"time"
+
+	sdk "github.com/ionos-cloud/sdk-go/v5"
+	"github.com/mitchellh/mapstructure"
 )
 
 type Options struct {

@@ -2,13 +2,22 @@
 
 import sys
 import json
-try:
-  import ionoscloud
-except ImportError:
-  import ionoscloud_autoscaling as ionoscloud
-import re
+import importlib
 import os
+import re
 
+try:
+    import ionoscloud
+except ImportError:
+    pass
+try:
+    import ionoscloud_autoscaling as ionoscloud
+except ImportError:
+    pass
+try:
+    import ionoscloud_dbaas_postgres as ionoscloud
+except ImportError:
+    pass
 
 def get_request_classes():
     classes = []

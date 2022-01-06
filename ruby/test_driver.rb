@@ -4,11 +4,17 @@ $LOAD_PATH << '.'
 
 require 'json'
 
-begin
-  require 'ionoscloud'
-rescue LoadError
-  require 'ionoscloud-autoscaling'
-  Ionoscloud = IonoscloudAutoscaling
+[
+  'ionoscloud' => 'Ionoscloud',
+  'ionoscloud-autoscaling' => 'IonoscloudAutoscaling',
+  'ionoscloud-dbaas-postgres' => 'IonoscloudDbaasPostgres',
+].each do |module_name, namespace|
+  begin
+    require module_name
+    Ionoscloud = Object.const_get(namespace)
+    break
+  rescue LoadError
+  end
 end
 
 config = Ionoscloud::Configuration.new

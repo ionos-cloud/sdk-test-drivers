@@ -60,7 +60,7 @@ begin
 
     special_params_names = %w[pretty depth XContractNumber contractNumber offset limit]
 
-    normal_params, special_params = testing_data['params'].partition do |el|
+    normal_params, special_params = (testing_data['params'].nil? ? [] : testing_data['params']).partition do |el|
       special_params_names.none? do |special_param_name|
         special_param_name == el['name']
       end

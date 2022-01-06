@@ -4,11 +4,11 @@ $LOAD_PATH << '.'
 
 require 'json'
 
-[
+{
   'ionoscloud' => 'Ionoscloud',
   'ionoscloud-autoscaling' => 'IonoscloudAutoscaling',
   'ionoscloud-dbaas-postgres' => 'IonoscloudDbaasPostgres',
-].each do |module_name, namespace|
+}.each do |module_name, namespace|
   begin
     require module_name
     Ionoscloud = Object.const_get(namespace)

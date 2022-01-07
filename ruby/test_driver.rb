@@ -58,7 +58,7 @@ begin
 
     cls = get_class method_name
 
-    special_params_names = %w[pretty depth XContractNumber contractNumber offset limit]
+    special_params_names = %w[pretty depth XContractNumber contractNumber offset limit start end]
 
     normal_params, special_params = (testing_data['params'].nil? ? [] : testing_data['params']).partition do |el|
       special_params_names.none? do |special_param_name|

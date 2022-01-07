@@ -78,7 +78,10 @@ begin
       special_params
     )
 
-    response = response.to_hash unless response.nil?
+    begin
+      response = response.to_hash
+    rescue NoMethodError
+    end
 
     headers = headers.transform_values do |value|
       value.split(',', -1)

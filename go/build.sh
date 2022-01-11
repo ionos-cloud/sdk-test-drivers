@@ -8,7 +8,7 @@ function usage() {
 	echo "error: $1"
 	echo
 	echo "usage: build.sh <major> <version> <core_lib_path> [<github_lib_path>]"
-	echo "example: build.sh v5 v5.1.3 /home/runner/work/sdk-go [github.com/ionos-cloud/sdk-go/v5]"
+	echo "example: build.sh v5 v5.1.11 /home/runner/work/sdk-go [github.com/ionos-cloud/sdk-go/v5]"
 	exit 1
 }
 

@@ -281,17 +281,17 @@ func callMethod(name string, method reflect.Value, args []reflect.Value, params 
 			output.Error = &ErrorStruct{Message: callErr.(error).Error()}
 		}
 	}
-
-	var headers = map[string]http.Header{}
+	
+	lowerCaseHeader := make(http.Header)
 
 	for key, value := range apiResponse.Header {
-		headers[strings.ToLower(key)] = value
+	    lowerCaseHeader[strings.ToLower(key)] = value
 	}
 
 	if apiResponse != nil && apiResponse.Response != nil {
 		output.HttpResponse = HttpResponse{
 			StatusCode: apiResponse.StatusCode,
-			Headers:    headers,
+			Headers:    lowerCaseHeader,
 			Body:       string(apiResponse.Payload),
 		}
 		if output.Error != nil {

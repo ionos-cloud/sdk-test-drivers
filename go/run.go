@@ -285,7 +285,7 @@ func callMethod(name string, method reflect.Value, args []reflect.Value, params 
 	var headers = map[string]string{}
 
 	for key, value := range apiResponse.Header {
-		headers[strings.toLower(key)] = value
+		headers[strings.ToLower(key)] = value
 	}
 
 	if apiResponse != nil && apiResponse.Response != nil {

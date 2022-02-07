@@ -91,8 +91,8 @@ begin
       'result' => response,
       'httpResponse' => {
         'statusCode' => status_code,
-        'headers' => headers,
-        'body' => response
+        'headers' => headers.transform_keys(&:downcase),
+        'body' => response,
       }
     }]
   end
@@ -102,9 +102,9 @@ rescue Ionoscloud::ApiError => e
     'httpResponse' => {
       'statusCode' => e.code,
       'headers' => e.response_headers,
-      'body' => JSON.parse(e.response_body)
+      'body' => JSON.parse(e.response_body),
     },
-    'error' => JSON.parse(e.response_body)
+    'error' => JSON.parse(e.response_body),
   }]
 rescue StandardError => e
   puts JSON[{
@@ -112,8 +112,8 @@ rescue StandardError => e
     'httpResponse' => {
       'statusCode' => nil,
       'headers' => nil,
-      'body' => nil
+      'body' => nil,
     },
-    'error' => e.inspect
+    'error' => e.inspect,
   }]
 end

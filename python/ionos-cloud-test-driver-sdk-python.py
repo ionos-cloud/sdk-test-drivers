@@ -69,7 +69,7 @@ if __name__ == "__main__":
                 "result": return_data,
                 "httpResponse": {
                     "statusCode": status_code,
-                    "headers": response_headers,
+                    "headers": {k.lower(): v for k, v in response_headers.items()},
                     "body": return_data,
                 }
             }))

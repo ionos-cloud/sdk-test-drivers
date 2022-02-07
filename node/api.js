@@ -65,41 +65,10 @@ class Api {
   async run(config, params) {
 
     if (this.methodName === WAIT_FOR_REQUEST_OP) {
-      return this.runWaitForRequest(config, params).then(response => this.restoreOriginalHeaders(response))
+      return this.runWaitForRequest(config, params)
     }
 
-    return this.runApiMethod(config, params).then(response => this.restoreOriginalHeaders(response))
-  }
-
-  /* axios is replacing the original headers with lower cased ones
-   * we need the original headers because of the other sdks and tests which
-   * are relying on a different case (the original one) even though the RFC states
-   * that the headers should be treated as case-insensitive (that's actually
-   * the reasoning behind axios' behavior)
-   */
-  restoreOriginalHeaders(response) {
-    const headers = {}
-    if (response.request !== undefined
-      && response.request.res !== undefined
-      && response.request.res.rawHeaders !== undefined) {
-
-      for (let i = 0; i < response.request.res.rawHeaders.length; i += 2) {
-        const header = response.request.res.rawHeaders[i]
-        if (headers[header] === undefined) {
-          headers[header] = []
-        }
-        headers[header].push(response.request.res.rawHeaders[i + 1])
-      }
-    } else {
-      for (const header of Object.keys(response.headers)) {
-        if (headers[header] === undefined) {
-          headers[header] = []
-        }
-        headers[header].push(response.headers[header])
-      }
-    }
-    response.headers = headers
-    return response
+    return this.runApiMethod(config, params)
   }
 }
 

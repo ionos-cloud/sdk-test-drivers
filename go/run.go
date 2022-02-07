@@ -282,7 +282,7 @@ func callMethod(name string, method reflect.Value, args []reflect.Value, params 
 		}
 	}
 
-	var headers = map[string]string{}
+	var headers = map[string]http.Header{}
 
 	for key, value := range apiResponse.Header {
 		headers[strings.ToLower(key)] = value

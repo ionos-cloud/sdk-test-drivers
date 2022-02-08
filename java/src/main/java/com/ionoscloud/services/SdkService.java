@@ -155,7 +155,12 @@ public class SdkService {
         Map<String, List<String>> headers = apiResponse.getHeaders();
         Map<String, List<String>> headersObject = new HashMap<>();
         for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
-            headersObject.put(entry.getKey(), entry.getValue());
+            headersObject.put(
+                    WordUtils
+                            .capitalize(entry.getKey().replace('-', ' '))
+                            .replace(' ', '-'),
+                    entry.getValue()
+            );
         }
 
 
@@ -177,7 +182,7 @@ public class SdkService {
                         HttpResponse
                                 .builder()
                                 .body(objectMapper.writeValueAsString(apiResponse.getData()))
-                                .headers(headersObject)
+                                .headers(apiResponse.getHeaders())
                                 .statusCode(apiResponse.getStatusCode())
                                 .build()
                 )

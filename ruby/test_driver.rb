@@ -54,7 +54,7 @@ begin
     api_client.wait_for_completion(request_id)
     puts JSON[{}]
   else
-    method_name =  "#{underscore_string(operation)}_with_http_info"
+    method_name = "#{underscore_string(operation)}_with_http_info"
 
     cls = get_class method_name
 

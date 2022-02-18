@@ -44,6 +44,7 @@ if __name__ == "__main__":
     configuration = ionoscloud.Configuration(
         username=os.environ.get('IONOS_USERNAME'),
         password=os.environ.get('IONOS_PASSWORD'),
+        token=os.environ.get('IONOS_TOKEN')
     )
     api_client = ionoscloud.ApiClient(configuration)
 

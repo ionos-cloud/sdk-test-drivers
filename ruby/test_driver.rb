@@ -65,7 +65,6 @@ begin
     end
 
     filters_index = special_params.index { |param| param['name'] == 'filters' }
-    max_results_index = special_params.index { |param| param['name'] == 'maxResults' }
 
     query_params = {
       'name' => 'query_params',

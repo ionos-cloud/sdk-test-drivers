@@ -39,12 +39,13 @@ def get_class_and_method(operation):
                 return request_class, method
     return None, None
 
+def to_snake(s):
+    return re.sub(r'(?<!^)(?=[A-Z])', '_', s).lower()
 
 if __name__ == "__main__":
     configuration = ionoscloud.Configuration(
         username=os.environ.get('IONOS_USERNAME'),
         password=os.environ.get('IONOS_PASSWORD'),
-        token=os.environ.get('IONOS_TOKEN')
     )
     api_client = ionoscloud.ApiClient(configuration)
 
@@ -52,7 +53,18 @@ if __name__ == "__main__":
     testing_data = json.loads(input[0])
 
     operation = testing_data['operation']
-    params = {re.sub(r'(?<!^)(?=[A-Z])', '_', p['name']).lower(): p['value'] for p in testing_data.get('params', [])}
+    params = {to_snake(p['name']): p['value'] for p in testing_data.get('params', [])}
+
+    params['query_params'] = {}
+
+    if 'filters' in params.keys():
+        for filter in list(params['filters'].keys()):
+            params['query_params']['filter.' + filter] = params['filters'].pop(filter)
+        del params['filters']
+
+    for query_param_name in ['orderBy', 'maxResults']:
+        if to_snake(query_param_name) in params.keys():
+            params['query_params'][query_param_name] = params.pop(to_snake(query_param_name))
 
     try:
         if operation == 'waitForRequest':

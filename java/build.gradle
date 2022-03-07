@@ -25,12 +25,14 @@ repositories {
 }
 
 def sdkVersion = project.getProperties().get("sdkVersion")
+def sdkName    = project.getProperties().get("sdkName")
 
 dependencies {
     implementation "com.thoughtworks.paranamer:paranamer:2.8"
-    implementation "com.ionoscloud:ionos-cloud-sdk:${sdkVersion}"
+    implementation "com.ionoscloud:${sdkName}:${sdkVersion}"
     implementation "org.reflections:reflections:0.9.11"
-    implementation "com.fasterxml.jackson.core:jackson-databind:2.11.3"
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.1'
+    implementation 'com.github.joschi.jackson:jackson-datatype-threetenbp:2.12.5'
     implementation 'org.apache.commons:commons-text:1.9'
 
     implementation 'org.hibernate.validator:hibernate-validator:7.0.1.Final'

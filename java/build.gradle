@@ -25,7 +25,7 @@ repositories {
 }
 
 def sdkVersion = project.getProperties().get("sdkVersion")
-def sdkName = project.getProperties().get("sdkName")
+def sdkName    = project.getProperties().get("sdkName")
 
 dependencies {
     implementation "com.thoughtworks.paranamer:paranamer:2.8"

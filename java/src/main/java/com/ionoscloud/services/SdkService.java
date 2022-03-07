@@ -1,7 +1,13 @@
 package com.ionoscloud.services;
 
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.threetenbp.ThreeTenModule;
 import com.google.gson.Gson;
 import com.ionoscloud.ApiClient;
 import com.ionoscloud.ApiException;
@@ -22,6 +28,7 @@ import org.reflections.scanners.SubTypesScanner;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
+import org.threeten.bp.OffsetDateTime;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -36,25 +43,32 @@ public class SdkService {
     private final Logger log = Logger.getLogger("sdk-service");
 
     private static final String BASE_PACKAGE_NAME = "com.ionoscloud.api";
-
+    private static final String CLOUDAPI_BASIC_AUTH = "Basic Authentication";
+    private static final String DBAAS_BASIC_AUTH = "basicAuth";
+    private static final String WAIT_FOR_REQUEST = "waitForRequest";
     public SdkService() {
 
-        String username = System.getenv("IONOS_USERNAME");
+        String username = System.getenv(Configuration.IONOS_USERNAME_ENV_VAR);
 
         if (username == null || username.trim().length() == 0) {
-            throw new IllegalArgumentException("IONOS_USERNAME env var not set");
+            throw new IllegalArgumentException(Configuration.IONOS_USERNAME_ENV_VAR + " env var not set");
         }
 
-        String password = System.getenv("IONOS_PASSWORD");
+        String password = System.getenv(Configuration.IONOS_PASSWORD_ENV_VAR);
 
         if (password == null || password.trim().length() == 0) {
-            throw new IllegalArgumentException("IONOS_PASSWORD env var not set");
+            throw new IllegalArgumentException(Configuration.IONOS_PASSWORD_ENV_VAR + " env var not set");
         }
 
         this.apiClient = Configuration.getDefaultApiClient();
 
         // Configure HTTP basic authorization: Basic Authentication
-        HttpBasicAuth basicAuthentication = (HttpBasicAuth) this.apiClient.getAuthentication("Basic Authentication");
+        HttpBasicAuth basicAuthentication = (HttpBasicAuth) this.apiClient.getAuthentication(CLOUDAPI_BASIC_AUTH);
+
+        //for DBaaS, we have 'basicAuth', not "Basic Authentication"
+        if (basicAuthentication == null) {
+           basicAuthentication = (HttpBasicAuth) this.apiClient.getAuthentication(DBAAS_BASIC_AUTH);
+        }
         basicAuthentication.setUsername(username);
         basicAuthentication.setPassword(password);
     }
@@ -65,7 +79,7 @@ public class SdkService {
         String operation  = input.getOperation();
         List<Param> params = input.getParams();
 
-        if (operation.equals("waitForRequest")) {
+        if (operation.equals(WAIT_FOR_REQUEST)) {
             return this.waitForRequest(input);
         } else {
 
@@ -172,11 +186,18 @@ public class SdkService {
          * However, this doesn't hurt since we were actually interested in using jackson to parse the input
          * payload that gets deserialized into sdk structures and use setters and getters there.
          */
-        HashMap<?, ?> resultMap = gson.fromJson(gson.toJsonTree(apiResponse.getData()).toString(), HashMap.class);
+        String apiResponseData = gson.toJsonTree(apiResponse.getData()).toString();
+        Object resultObj;
+        //we can also get an array here - "[]" for infosVersionsGet, or a map "{"data":{}}"
+        if (apiResponseData.startsWith("[")) {
+            resultObj = objectMapper.readValue(apiResponseData, List.class);
+        } else {
+            resultObj = objectMapper.readValue(apiResponseData, HashMap.class);
+        }
 
         return Response
                 .builder()
-                .result(resultMap)
+                .result(resultObj)
                 // .result(apiResponse.getData()) - we could've done this if jackson was used by openapi generator
                 .httpResponse(
                         HttpResponse
@@ -190,7 +211,7 @@ public class SdkService {
     }
 
 
-    protected Response waitForRequest(Input input) throws ApiException {
+    protected Response waitForRequest(Input input) throws Throwable {
         Param requestParam = input.getParams().stream()
                 .filter(n -> n.getName().equals("request"))
                 .findFirst()
@@ -198,9 +219,42 @@ public class SdkService {
 
         String requestId = getRequestIdFromUrl((String)requestParam.getValue());
 
-        log.info("waitForRequest: " + requestId);
+        log.info(WAIT_FOR_REQUEST + " requestId: " + requestId);
+        //we need to do this because for DBaaS, waitForRequest does not exist
+        for (Method method : ApiClient.class.getDeclaredMethods()) {
+            if (method.getName().equals(WAIT_FOR_REQUEST)) {
+                 try {
+                    method.invoke(null, requestId, 80000, 4000, 2000);
+                 }
+                 catch (InvocationTargetException e) {
+                    Throwable target = e.getTargetException();
+                    if (target instanceof ApiException) {
+                        ApiException apiEx = (ApiException)target;
+                        HttpResponse httpResponse = HttpResponse
+                                .builder()
+                                .body(apiEx.getResponseBody())
+                                .headers(apiEx.getResponseHeaders())
+                                .statusCode(apiEx.getCode())
+                                .build();
+                        return Response
+                                .builder()
+                                .result(apiEx.getResponseBody())
+                                .error(
+                                        Error
+                                                .builder()
+                                                .message(apiEx.getMessage())
+                                                .apiResponse(httpResponse)
+                                                .build()
+                                )
+                                .httpResponse(httpResponse)
+                                .build();
+                    } else {
+                        throw target;
+                    }
+                }
+            }
+        }
 
-        ApiClient.waitForRequest(requestId, 80000, 4000, 2000);
 
         return Response.builder().build();
     }
@@ -219,12 +273,20 @@ public class SdkService {
 
         List<Object> paramList = new ArrayList<>();
 
-        ObjectMapper mapper = new ObjectMapper();
+        ObjectMapper mapper = JsonMapper.builder().
+                enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS).
+                //adds support for enums that have different name than value. eg: de_txl(de/txl)
+                enable(DeserializationFeature.READ_ENUMS_USING_TO_STRING).
+                //support for string to OffsetDateTime conversion
+                enable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS).
+                build();
         mapper.setVisibility(mapper.getSerializationConfig().getDefaultVisibilityChecker()
                 .withFieldVisibility(JsonAutoDetect.Visibility.NONE)
                 .withGetterVisibility(JsonAutoDetect.Visibility.ANY)
                 .withSetterVisibility(JsonAutoDetect.Visibility.ANY)
                 .withCreatorVisibility(JsonAutoDetect.Visibility.ANY));
+        //support for string to OffsetDateTime conversion
+        mapper.registerModule(new ThreeTenModule());
 
         for (String parameterName : methodParameterNames) {
             if (testParams.containsKey(parameterName) || testParams.containsKey(StringUtils.capitalize(parameterName))) {
@@ -236,6 +298,8 @@ public class SdkService {
 
 
                 if (testParameter instanceof Map || testParameter instanceof List) {
+                    paramList.add(mapper.convertValue(testParameter, parameterType));
+                } else if (parameterType.getName().contentEquals(OffsetDateTime.class.getName())) {
                     paramList.add(mapper.convertValue(testParameter, parameterType));
                 } else {
                     paramList.add(testParameter);

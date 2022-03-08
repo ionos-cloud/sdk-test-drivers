@@ -25,11 +25,11 @@ repositories {
 }
 
 def sdkVersion = project.getProperties().get("sdkVersion")
-def sdkName    = project.getProperties().get("sdkName")
+def sdkArtifactId    = project.getProperties().get("sdkArtifactId")
 
 dependencies {
     implementation "com.thoughtworks.paranamer:paranamer:2.8"
-    implementation "com.ionoscloud:${sdkName}:${sdkVersion}"
+    implementation "com.ionoscloud:${sdkArtifactId}:${sdkVersion}"
     implementation "org.reflections:reflections:0.9.11"
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.1'
     implementation 'com.github.joschi.jackson:jackson-datatype-threetenbp:2.12.5'

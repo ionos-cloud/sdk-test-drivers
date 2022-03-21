@@ -58,7 +58,7 @@ begin
 
     cls = get_class method_name
 
-    special_params_names = %w[pretty depth XContractNumber contractNumber offset limit start end filters orderBy maxResults]
+    special_params_names = %w[pretty depth XContractNumber contractNumber offset limit direction start end filters orderBy maxResults]
 
     normal_params, special_params = (testing_data['params'].nil? ? [] : testing_data['params']).partition do |el|
       special_params_names.none? { |special_param_name| special_param_name == el['name'] }

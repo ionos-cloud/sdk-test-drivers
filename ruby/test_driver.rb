@@ -54,17 +54,36 @@ begin
     api_client.wait_for_completion(request_id)
     puts JSON[{}]
   else
-    method_name =  "#{underscore_string(operation)}_with_http_info"
+    method_name = "#{underscore_string(operation)}_with_http_info"
 
     cls = get_class method_name
 
-    special_params_names = %w[pretty depth XContractNumber contractNumber offset limit start end]
+    special_params_names = %w[pretty depth XContractNumber contractNumber offset limit direction start end filters orderBy maxResults]
 
     normal_params, special_params = (testing_data['params'].nil? ? [] : testing_data['params']).partition do |el|
-      special_params_names.none? do |special_param_name|
-        special_param_name == el['name']
+      special_params_names.none? { |special_param_name| special_param_name == el['name'] }
+    end
+
+    filters_index = special_params.index { |param| param['name'] == 'filters' }
+
+    query_params = {
+      'name' => 'query_params',
+      'value' => {},
+    }
+    unless filters_index.nil?
+      special_params[filters_index]['value'].keys.each { |key| query_params['value'][('filter.' + key).to_sym] = special_params[filters_index]['value'][key] }
+      special_params.delete_at(filters_index)
+    end
+
+    ['orderBy', 'maxResults'].each do |query_param_name|
+      index = special_params.index { |param| param['name'] == query_param_name }
+      unless index.nil?
+        query_params['value'][query_param_name.to_sym] = special_params[index]['value']
+        special_params.delete_at(index)
       end
     end
+
+    special_params.push(query_params)
 
     normal_params = normal_params.map { |el| el['value'] }
 
@@ -75,7 +94,7 @@ begin
     response, status_code, headers = cls.new(api_client).public_send(
       method_name.to_sym,
       *normal_params,
-      special_params
+      special_params,
     )
 
     begin

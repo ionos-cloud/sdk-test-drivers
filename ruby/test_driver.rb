@@ -6,7 +6,7 @@ require 'json'
 
 {
   'ionoscloud' => 'Ionoscloud',
-  'ionoscloud-autoscaling' => 'IonoscloudAutoscaling',
+  'ionoscloud-vm-autoscaling' => 'IonoscloudVmAutoscaling',
   'ionoscloud-dbaas-postgres' => 'IonoscloudDbaasPostgres',
 }.each do |module_name, namespace|
   begin

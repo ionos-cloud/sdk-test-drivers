@@ -8,6 +8,7 @@ require 'json'
   'ionoscloud' => 'Ionoscloud',
   'ionoscloud-vm-autoscaling' => 'IonoscloudVmAutoscaling',
   'ionoscloud-dbaas-postgres' => 'IonoscloudDbaasPostgres',
+  'ionoscloud-container-registry' => 'IonoscloudContainerRegistry',
 }.each do |module_name, namespace|
   begin
     require module_name
@@ -21,6 +22,7 @@ config = Ionoscloud::Configuration.new
 
 config.username = ENV['IONOS_USERNAME']
 config.password = ENV['IONOS_PASSWORD']
+config.token = ENV['IONOS_TOKEN']
 
 api_client = Ionoscloud::ApiClient.new(config)
 
@@ -116,14 +118,20 @@ begin
     }]
   end
 rescue Ionoscloud::ApiError => e
+  begin
+    json_body = e.response_body
+  rescue StandardError
+    json_body = nil
+  end
+
   puts JSON[{
     'result' => 'ApiException occured',
     'httpResponse' => {
       'statusCode' => e.code,
       'headers' => e.response_headers,
-      'body' => JSON.parse(e.response_body),
+      'body' => json_body,
     },
-    'error' => JSON.parse(e.response_body),
+    'error' => json_body,
   }]
 rescue StandardError => e
   puts JSON[{

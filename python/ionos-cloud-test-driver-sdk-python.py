@@ -10,6 +10,7 @@ module_names_to_import = [
   'ionoscloud',
   'ionoscloud_vm_autoscaling',
   'ionoscloud_dbaas_postgres',
+  'ionoscloud_container_registry',
 ]
 
 for module_name in module_names_to_import:

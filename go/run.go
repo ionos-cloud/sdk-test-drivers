@@ -281,11 +281,12 @@ func callMethod(name string, method reflect.Value, args []reflect.Value, params 
 			output.Error = &ErrorStruct{Message: callErr.(error).Error()}
 		}
 	}
-	
-	lowerCaseHeader := make(http.Header)
 
-	for key, value := range apiResponse.Header {
-	    lowerCaseHeader[strings.ToLower(key)] = value
+	lowerCaseHeader := make(http.Header)
+	if apiResponse != nil {
+		for key, value := range apiResponse.Header {
+			lowerCaseHeader[strings.ToLower(key)] = value
+		}
 	}
 
 	if apiResponse != nil && apiResponse.Response != nil {

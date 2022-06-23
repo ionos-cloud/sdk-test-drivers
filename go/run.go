@@ -283,7 +283,7 @@ func callMethod(name string, method reflect.Value, args []reflect.Value, params 
 	}
 
 	lowerCaseHeader := make(http.Header)
-	if apiResponse != nil {
+	if apiResponse != nil && apiResponse.Response != nil {
 		for key, value := range apiResponse.Header {
 			lowerCaseHeader[strings.ToLower(key)] = value
 		}

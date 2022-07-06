@@ -8,7 +8,7 @@ require 'json'
   'ionoscloud' => 'Ionoscloud',
   'ionoscloud-vm-autoscaling' => 'IonoscloudVmAutoscaling',
   'ionoscloud-dbaas-postgres' => 'IonoscloudDbaasPostgres',
-  'ionoscloud-cert-manager',  => 'IonoscloudCertManager',
+  'ionoscloud-cert-manager'   => 'IonoscloudCertManager',
 }.each do |module_name, namespace|
   begin
     require module_name

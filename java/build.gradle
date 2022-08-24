@@ -2,11 +2,13 @@ plugins {
     id 'java'
 }
 
+def sdkPackageName = project.getProperties().get("sdkPackageName")
+
 task fatJar(type: Jar) {
     manifest {
         attributes 'Implementation-Title': 'SDK Test Driver',
                 'Implementation-Version': 1.0,
-                'Main-Class': 'com.ionoscloud.Main'
+                'Main-Class': "${sdkPackageName}.Main"
     }
     from {
         configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
@@ -15,7 +17,8 @@ task fatJar(type: Jar) {
     with jar
 }
 
-group 'com.ionoscloud'
+
+group '${sdkPackageName}'
 
 sourceCompatibility = 1.8
 
@@ -24,12 +27,12 @@ repositories {
     mavenCentral()
 }
 
-def sdkVersion = project.getProperties().get("sdkVersion")
+def sdkVersion       = project.getProperties().get("sdkVersion")
 def sdkArtifactId    = project.getProperties().get("sdkArtifactId")
 
 dependencies {
     implementation "com.thoughtworks.paranamer:paranamer:2.8"
-    implementation "com.ionoscloud:${sdkArtifactId}:${sdkVersion}"
+    implementation "${sdkPackageName}:${sdkArtifactId}:${sdkVersion}"
     implementation "org.reflections:reflections:0.9.11"
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.1'
     implementation 'com.github.joschi.jackson:jackson-datatype-threetenbp:2.12.5'

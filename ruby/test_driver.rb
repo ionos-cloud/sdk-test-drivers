@@ -10,6 +10,7 @@ require 'json'
   'ionoscloud-dbaas-postgres' => 'IonoscloudDbaasPostgres',
   'ionoscloud-cert-manager'   => 'IonoscloudCertManager',
   'ionoscloud-dbaas-mongo'   => 'IonoscloudDbaasMongo',
+  'ionoscloud-container-registry'   => 'IonoscloudContainerRegistry'
 }.each do |module_name, namespace|
   begin
     require module_name

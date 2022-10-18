@@ -59,8 +59,34 @@ func getDecoder(result interface{}) (*mapstructure.Decoder, error) {
 	var decoderConfig = &mapstructure.DecoderConfig{
 		ErrorUnused: true,
 		Result:      result,
+		DecodeHook: mapstructure.ComposeDecodeHookFunc(
+			ToTimeHookFunc()),
 	}
 	return mapstructure.NewDecoder(decoderConfig)
+}
+
+// ToTimeHookFunc - decodes ionosTime before it is parsed
+func ToTimeHookFunc() mapstructure.DecodeHookFunc {
+	return func(
+		f reflect.Type,
+		t reflect.Type,
+		data interface{}) (interface{}, error) {
+		if t != reflect.TypeOf(sdk.IonosTime{}) {
+			return data, nil
+		}
+
+		switch f.Kind() {
+		case reflect.String:
+			return time.Parse(time.RFC3339, data.(string))
+		case reflect.Float64:
+			return time.Unix(0, int64(data.(float64))*int64(time.Millisecond)), nil
+		case reflect.Int64:
+			return time.Unix(0, data.(int64)*int64(time.Millisecond)), nil
+		default:
+			return data, nil
+		}
+		// Convert it by parsing
+	}
 }
 
 func getParamsMap(params []InputParam) map[string]InputParam {
@@ -235,12 +261,14 @@ func callMethod(name string, method reflect.Value, args []reflect.Value, params 
 			/* find the method associated with this param */
 			builderMethod := objectRes[0].MethodByName(strings.Title(param.Name))
 			if builderMethod.IsValid() {
-				reflectArg, err := convertParamToArg(param.Value, builderMethod.Type().In(0))
-				if err != nil {
-					output.Error = &ErrorStruct{Message: err.Error()}
-					return
+				if param.Value != nil {
+					reflectArg, err := convertParamToArg(param.Value, builderMethod.Type().In(0))
+					if err != nil {
+						output.Error = &ErrorStruct{Message: err.Error()}
+						return
+					}
+					objectRes = builderMethod.Call([]reflect.Value{reflectArg})
 				}
-				objectRes = builderMethod.Call([]reflect.Value{reflectArg})
 				param.Processed = true
 			}
 		}

@@ -1,10 +1,10 @@
 module github.com/ionos-cloud/ionos-cloud-test-driver-sdk-go
 
-go 1.17
+go 1.18
 
 require (
 	github.com/ionos-cloud/sdk-go/v5 v5.1.11
-	github.com/mitchellh/mapstructure v1.4.3
+	github.com/mitchellh/mapstructure v1.5.0
 )
 
 require (

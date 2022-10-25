@@ -121,7 +121,7 @@ begin
 rescue Ionoscloud::ApiError => e
   error_body = e.response_body
   if e.response_body == ''
-    error_body = nil
+    error_body = {}
   end
   puts JSON[{
     'result' => 'ApiException occured',

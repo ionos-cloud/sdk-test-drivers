@@ -13,6 +13,7 @@ module_names_to_import = [
   'ionoscloud_dbaas_mongo',
   'ionoscloud_cert_manager',
   'ionoscloud_dataplatform',
+  'ionoscloud_container_registry',
 ]
 
 for module_name in module_names_to_import:

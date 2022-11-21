@@ -299,7 +299,7 @@ public class SdkService {
 
                 if (testParameter instanceof Map || testParameter instanceof List) {
                     paramList.add(mapper.convertValue(testParameter, parameterType));
-                } else if (parameterType.getName().contentEquals(OffsetDateTime.class.getName())) {
+                } else if (parameterType.getName().contentEquals(OffsetDateTime.class.getName()) || (parameterType.getName().contentEquals(UUID.class.getName()))) {
                     paramList.add(mapper.convertValue(testParameter, parameterType));
                 } else {
                     paramList.add(testParameter);

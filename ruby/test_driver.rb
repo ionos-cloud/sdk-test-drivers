@@ -106,7 +106,7 @@ begin
     end
 
     headers = headers.transform_values do |value|
-      value.split(',', -1)
+      value.split(',', -1) if value.is_a? String
     end
 
     puts JSON[{

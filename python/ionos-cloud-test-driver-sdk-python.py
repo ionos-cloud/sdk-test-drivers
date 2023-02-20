@@ -6,22 +6,25 @@ import importlib
 import os
 import re
 
-module_names_to_import = [
-  'ionoscloud',
-  'ionoscloud_vm_autoscaling',
-  'ionoscloud_dbaas_postgres',
-  'ionoscloud_dbaas_mongo',
-  'ionoscloud_cert_manager',
-  'ionoscloud_dataplatform',
-  'ionoscloud_container_registry',
-]
+if len(sys.argv) > 1:
+    ionoscloud = importlib.import_module(sys.argv[1])
+else:
+    module_names_to_import = [
+        'ionoscloud',
+        'ionoscloud_vm_autoscaling',
+        'ionoscloud_dbaas_postgres',
+        'ionoscloud_dbaas_mongo',
+        'ionoscloud_cert_manager',
+        'ionoscloud_dataplatform',
+        'ionoscloud_container_registry',
+    ]
 
-for module_name in module_names_to_import:
-  try:
-      ionoscloud = importlib.import_module(module_name)
-      break
-  except ImportError:
-      pass
+    for module_name in module_names_to_import:
+        try:
+            ionoscloud = importlib.import_module(module_name)
+            break
+        except ImportError:
+            pass
 
 def get_request_classes():
     classes = []
@@ -78,7 +81,7 @@ if __name__ == "__main__":
                     "body": return_data,
                 }
             }))
-    except ionoscloud.exceptions.ApiException as e:
+    except ionoscloud.ApiException as e:
         sys.stdout.write(json.dumps({
             "result": 'ApiException occured',
             "httpResponse": {

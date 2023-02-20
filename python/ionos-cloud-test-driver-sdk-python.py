@@ -81,7 +81,7 @@ if __name__ == "__main__":
                     "body": return_data,
                 }
             }))
-    except ionoscloud.exceptions.ApiException as e:
+    except ionoscloud.ApiException as e:
         sys.stdout.write(json.dumps({
             "result": 'ApiException occured',
             "httpResponse": {

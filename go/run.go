@@ -19,6 +19,7 @@ import (
 type Options struct {
 	Username *string `json:"username,omitempty"`
 	Password *string `json:"password,omitempty"`
+	Token 	 *string `json:"token,omitempty"`
 	Timeout  *int64  `json:"timeout,omitempty"`
 }
 
@@ -396,7 +397,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	var username, password string
+	var username, password, token string
 
 	if input.Options != nil && input.Options.Username != nil {
 		username = *input.Options.Username
@@ -410,7 +411,13 @@ func main() {
 		password = os.Getenv("IONOS_PASSWORD")
 	}
 
-	client := sdk.NewAPIClient(sdk.NewConfiguration(username, password, "", ""))
+	if input.Options != nil && input.Options.Token != nil {
+		token = *input.Options.Token
+	} else {
+		token = os.Getenv("IONOS_TOKEN")
+	}
+
+	client := sdk.NewAPIClient(sdk.NewConfiguration(username, password, token, ""))
 
 	operation := strings.Title(strings.TrimSpace(input.Operation))
 	if operation == "" {

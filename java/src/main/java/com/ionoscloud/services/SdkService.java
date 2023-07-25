@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.datatype.threetenbp.ThreeTenModule;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.gson.Gson;
 import com.ionoscloud.ApiClient;
 import com.ionoscloud.ApiException;
@@ -28,7 +28,7 @@ import org.reflections.scanners.SubTypesScanner;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
-import org.threeten.bp.OffsetDateTime;
+import java.time.OffsetDateTime;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -119,6 +119,7 @@ public class SdkService {
             throws Throwable {
 
         ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
 
         log.info("call params: " + objectMapper.writeValueAsString(prm));
 
@@ -286,7 +287,7 @@ public class SdkService {
                 .withSetterVisibility(JsonAutoDetect.Visibility.ANY)
                 .withCreatorVisibility(JsonAutoDetect.Visibility.ANY));
         //support for string to OffsetDateTime conversion
-        mapper.registerModule(new ThreeTenModule());
+        mapper.registerModule(new JavaTimeModule());
 
         for (String parameterName : methodParameterNames) {
             if (testParams.containsKey(parameterName) || testParams.containsKey(StringUtils.capitalize(parameterName))) {

@@ -14,6 +14,7 @@ import com.ionoscloud.ApiException;
 import com.ionoscloud.ApiResponse;
 import com.ionoscloud.Configuration;
 import com.ionoscloud.auth.HttpBasicAuth;
+import com.ionoscloud.auth.ApiKeyAuth;
 import com.ionoscloud.models.*;
 import com.ionoscloud.models.Error;
 import com.thoughtworks.paranamer.AnnotationParanamer;
@@ -69,7 +70,7 @@ public class SdkService {
         this.apiClient = Configuration.getDefaultApiClient();
 
 
-        if (token) {
+        if (token != null && token.trim().length() != 0) {
             ApiKeyAuth apiKeyAuth = (ApiKeyAuth) this.apiClient.getAuthentication(CLOUDAPI_TOKEN_AUTH);
             if (apiKeyAuth == null) {
                 apiKeyAuth = (ApiKeyAuth) this.apiClient.getAuthentication(DBAAS_TOKEN_AUTH);

@@ -24,6 +24,7 @@ config = Ionoscloud::Configuration.new
 
 config.username = ENV['IONOS_USERNAME']
 config.password = ENV['IONOS_PASSWORD']
+config.token = ENV['IONOS_TOKEN']
 
 api_client = Ionoscloud::ApiClient.new(config)
 

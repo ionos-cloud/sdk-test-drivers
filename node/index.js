@@ -17,9 +17,9 @@ async function run() {
   }
 
   try {
-    const config = new sdk.Configuration()
+    const config = new sdk.Configuration({username, password})
     
-    if (token) {
+    if (token !== undefined) {
       config.accessToken = token
     } else {
       config.username = username

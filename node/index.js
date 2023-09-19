@@ -17,14 +17,7 @@ async function run() {
   }
 
   try {
-    const config = new sdk.Configuration({username, password})
-    
-    if (token !== undefined) {
-      config.accessToken = token
-    } else {
-      config.username = username
-      config.password = password
-    }
+    const config = new sdk.Configuration({accessToken: token, username, password})
 
     config.setDepth(10).setPretty(true);
 

@@ -5,22 +5,26 @@ const api = require('./api')
 
 const username = process.env['IONOS_USERNAME']
 const password = process.env['IONOS_PASSWORD']
+const token = process.env['IONOS_TOKEN']
 
 async function run() {
   if (sdk === undefined) {
     await output.error('IONOS_SDK_NAME env variable not found')
   }
 
-  if (username === undefined) {
-    await output.error('IONOS_USERNAME env variable not found')
-  }
-
-  if (password === undefined) {
-    await output.error('IONOS_PASSWORD env variable not found')
+  if ((username === undefined || password === undefined) && token === undefined) {
+    await output.error('IONOS_USERNAME and IONOS_PASSWORD or IONOS_TOKEN env variables not found')
   }
 
   try {
-    const config = new sdk.Configuration({username, password});
+    const config = new sdk.Configuration()
+    
+    if (token) {
+      config.accessToken = token
+    } else {
+      config.username = username
+      config.password = password
+    }
 
     config.setDepth(10).setPretty(true);
 

@@ -44,33 +44,49 @@ public class SdkService {
 
     private static final String BASE_PACKAGE_NAME = "com.ionoscloud.api";
     private static final String CLOUDAPI_BASIC_AUTH = "Basic Authentication";
+    private static final String CLOUDAPI_TOKEN_AUTH = "Token Authentication";
     private static final String DBAAS_BASIC_AUTH = "basicAuth";
+    private static final String DBAAS_TOKEN_AUTH = "tokenAuth";
     private static final String WAIT_FOR_REQUEST = "waitForRequest";
     public SdkService() {
 
         String username = System.getenv(Configuration.IONOS_USERNAME_ENV_VAR);
-
-        if (username == null || username.trim().length() == 0) {
-            throw new IllegalArgumentException(Configuration.IONOS_USERNAME_ENV_VAR + " env var not set");
-        }
-
         String password = System.getenv(Configuration.IONOS_PASSWORD_ENV_VAR);
+        String token = System.getenv(Configuration.IONOS_TOKEN_ENV_VAR);
 
-        if (password == null || password.trim().length() == 0) {
-            throw new IllegalArgumentException(Configuration.IONOS_PASSWORD_ENV_VAR + " env var not set");
+        if (
+            (
+                (username == null || username.trim().length() == 0) ||
+                (password == null || password.trim().length() == 0)
+            ) && (token == null || token.trim().length() == 0)
+         ) {
+            throw new IllegalArgumentException(
+                Configuration.IONOS_USERNAME_ENV_VAR + "and" +
+                Configuration.IONOS_PASSWORD_ENV_VAR + "or" +
+                Configuration.IONOS_TOKEN_ENV_VAR + " env vars not set");
         }
 
         this.apiClient = Configuration.getDefaultApiClient();
 
-        // Configure HTTP basic authorization: Basic Authentication
-        HttpBasicAuth basicAuthentication = (HttpBasicAuth) this.apiClient.getAuthentication(CLOUDAPI_BASIC_AUTH);
 
-        //for DBaaS, we have 'basicAuth', not "Basic Authentication"
-        if (basicAuthentication == null) {
-           basicAuthentication = (HttpBasicAuth) this.apiClient.getAuthentication(DBAAS_BASIC_AUTH);
+        if (token) {
+            ApiKeyAuth apiKeyAuth = (ApiKeyAuth) this.apiClient.getAuthentication(CLOUDAPI_TOKEN_AUTH);
+            if (apiKeyAuth == null) {
+                apiKeyAuth = (ApiKeyAuth) this.apiClient.getAuthentication(DBAAS_TOKEN_AUTH);
+            }
+            apiKeyAuth.setApiKey(token);
+            apiKeyAuth.setApiKeyPrefix("Bearer");
+        } else {
+            // Configure HTTP basic authorization: Basic Authentication
+            HttpBasicAuth basicAuthentication = (HttpBasicAuth) this.apiClient.getAuthentication(CLOUDAPI_BASIC_AUTH);
+    
+            //for DBaaS, we have 'basicAuth', not "Basic Authentication"
+            if (basicAuthentication == null) {
+               basicAuthentication = (HttpBasicAuth) this.apiClient.getAuthentication(DBAAS_BASIC_AUTH);
+            }
+            basicAuthentication.setUsername(username);
+            basicAuthentication.setPassword(password);
         }
-        basicAuthentication.setUsername(username);
-        basicAuthentication.setPassword(password);
     }
 
     public Response run(Input input)

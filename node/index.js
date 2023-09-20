@@ -17,7 +17,7 @@ async function run() {
   }
 
   try {
-    const config = new sdk.Configuration({apiKey: "Bearer " + token, username, password})
+    const config = new sdk.Configuration({apiKey: token, username, password})
 
     config.setDepth(10).setPretty(true);
 

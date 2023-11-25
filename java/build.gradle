@@ -35,11 +35,13 @@ dependencies {
     implementation "${sdkPackageName}:${sdkArtifactId}:${sdkVersion}"
     implementation 'org.reflections:reflections:0.9.11'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.4.2'
-    implementation 'com.github.joschi.jackson:jackson-datatype-threetenbp:2.12.5'
+
     implementation 'org.apache.commons:commons-text:1.10.0'
 
     implementation 'org.hibernate.validator:hibernate-validator:7.0.1.Final'
     implementation 'org.glassfish:jakarta.el:4.0.0'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.1'
+    implementation 'io.gsonfire:gson-fire:1.0.1'
 
     compileOnly 'org.projectlombok:lombok:1.18.20'
     annotationProcessor 'org.projectlombok:lombok:1.18.20'

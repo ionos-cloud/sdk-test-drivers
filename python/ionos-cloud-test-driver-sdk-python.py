@@ -19,6 +19,7 @@ else:
         'ionoscloud_container_registry',
         'ionoscloud_dns',
         'ionoscloud_logging',
+        'ionoscloud_dbaas_mariadb',
     ]
 
     for module_name in module_names_to_import:

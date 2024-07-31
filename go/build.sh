@@ -37,7 +37,9 @@ sed -i "s%\"github.com\/ionos-cloud\/sdk-go\/\(.*\)\"$%\"${github_lib_path}\"%g"
 # remove backup file created by sed
 rm -f go.mod.bak
 
-# use locally installed core library
-echo "replace ${github_lib_path} => ${core_lib_path}" >> go.mod || exit 1
+# use locally installed core library if not already replaced
+if ! grep -q "replace ${github_lib_path} => ${core_lib_path}" go.mod; then
+	echo "replace ${github_lib_path} => ${core_lib_path}" >> go.mod || exit 1
+fi
 
 go build . || exit 1

@@ -20,6 +20,7 @@ else:
         'ionoscloud_dns',
         'ionoscloud_logging',
         'ionoscloud_dbaas_mariadb',
+        'ionoscloud_s3_management',
     ]
 
     for module_name in module_names_to_import:

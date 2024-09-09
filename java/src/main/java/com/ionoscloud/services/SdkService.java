@@ -17,7 +17,6 @@ import com.ionoscloud.auth.HttpBasicAuth;
 import com.ionoscloud.auth.HttpBearerAuth;
 import com.ionoscloud.auth.ApiKeyAuth;
 import com.ionoscloud.models.*;
-import com.ionoscloud.models.Error;
 import com.thoughtworks.paranamer.AnnotationParanamer;
 import com.thoughtworks.paranamer.BytecodeReadingParanamer;
 import com.thoughtworks.paranamer.CachingParanamer;
@@ -85,35 +84,37 @@ public class SdkService {
         }
     }
 
-    public String getAuthToken(String token) {
-        if (token != null && !token.trim().isEmpty()) {
-            String authToken = setAuthToken(token, CLOUDAPI_TOKEN_AUTH);
-            if (authToken == null) {
-                authToken = setAuthToken(token, DBAAS_TOKEN_AUTH);
-            }
-            return authToken;
+public String getAuthToken(String token) {
+    if (token != null && !token.trim().isEmpty()) {
+        // Try CLOUDAPI_TOKEN_AUTH first, then fallback to DBAAS_TOKEN_AUTH
+        String authToken = setAuthToken(token, CLOUDAPI_TOKEN_AUTH);
+        if (authToken == null) {
+            authToken = setAuthToken(token, DBAAS_TOKEN_AUTH);
         }
-        return null;
+        return authToken;
     }
+    return null; // Or handle as appropriate
+}
+
+private String setAuthToken(String token, String authType) {
+    Object auth = this.apiClient.getAuthentication(authType);
     
-    private String setAuthToken(String token, String authType) {
-        Object auth = this.apiClient.getAuthentication(authType);
-        
-        if (auth instanceof ApiKeyAuth) {
-            ApiKeyAuth apiKeyAuth = (ApiKeyAuth) auth;
-            apiKeyAuth.setApiKey(token);
-            apiKeyAuth.setApiKeyPrefix("Bearer");
-            return apiKeyAuth.getApiKey();
-        }
-    
-        if (auth instanceof HttpBearerAuth) {
-            HttpBearerAuth bearerAuth = (HttpBearerAuth) auth;
-            bearerAuth.setBearerToken(token);
-            return bearerAuth.getBearerToken();
-        }
-    
-        return null;
+    if (auth instanceof ApiKeyAuth) {
+        ApiKeyAuth apiKeyAuth = (ApiKeyAuth) auth;
+        apiKeyAuth.setApiKey(token);
+        apiKeyAuth.setApiKeyPrefix("Bearer");
+        return apiKeyAuth.getApiKey();
     }
+
+    if (auth instanceof HttpBearerAuth) {
+        HttpBearerAuth bearerAuth = (HttpBearerAuth) auth;
+        bearerAuth.setBearerToken(token);
+        return bearerAuth.getBearerToken();
+    }
+
+    return null;
+}
+
     
     public Response run(Input input)
             throws Throwable {

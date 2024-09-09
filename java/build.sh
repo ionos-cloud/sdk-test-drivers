@@ -19,4 +19,5 @@ fi
 
 # replace core lib version
 # NOTE: THIS RUNS ON LINUX ONLY - DOESN'T WORK ON OSX - on OSX the -i flag requires an extension name to save backups to
- find . -name "*.java" -exec sed -i "s/com.ionoscloud/${core_lib_path}/g" {} \; || exit 1
+git reset --hard
+find . -name "*.java" -exec sed -i "s/com.ionoscloud/${core_lib_path}/g" {} \; || exit 1

@@ -14,6 +14,7 @@ import com.ionoscloud.ApiException;
 import com.ionoscloud.ApiResponse;
 import com.ionoscloud.Configuration;
 import com.ionoscloud.auth.HttpBasicAuth;
+import com.ionoscloud.auth.HttpBearerAuth;
 import com.ionoscloud.auth.ApiKeyAuth;
 import com.ionoscloud.models.*;
 import com.ionoscloud.models.Error;
@@ -69,14 +70,8 @@ public class SdkService {
 
         this.apiClient = Configuration.getDefaultApiClient();
 
-
         if (token != null && token.trim().length() != 0) {
-            ApiKeyAuth apiKeyAuth = (ApiKeyAuth) this.apiClient.getAuthentication(CLOUDAPI_TOKEN_AUTH);
-            if (apiKeyAuth == null) {
-                apiKeyAuth = (ApiKeyAuth) this.apiClient.getAuthentication(DBAAS_TOKEN_AUTH);
-            }
-            apiKeyAuth.setApiKey(token);
-            apiKeyAuth.setApiKeyPrefix("Bearer");
+          String authToken = getAuthToken(token);
         } else {
             // Configure HTTP basic authorization: Basic Authentication
             HttpBasicAuth basicAuthentication = (HttpBasicAuth) this.apiClient.getAuthentication(CLOUDAPI_BASIC_AUTH);
@@ -90,6 +85,36 @@ public class SdkService {
         }
     }
 
+    public String getAuthToken(String token) {
+        if (token != null && !token.trim().isEmpty()) {
+            String authToken = setAuthToken(token, CLOUDAPI_TOKEN_AUTH);
+            if (authToken == null) {
+                authToken = setAuthToken(token, DBAAS_TOKEN_AUTH);
+            }
+            return authToken;
+        }
+        return null;
+    }
+    
+    private String setAuthToken(String token, String authType) {
+        Object auth = this.apiClient.getAuthentication(authType);
+        
+        if (auth instanceof ApiKeyAuth) {
+            ApiKeyAuth apiKeyAuth = (ApiKeyAuth) auth;
+            apiKeyAuth.setApiKey(token);
+            apiKeyAuth.setApiKeyPrefix("Bearer");
+            return apiKeyAuth.getApiKey();
+        }
+    
+        if (auth instanceof HttpBearerAuth) {
+            HttpBearerAuth bearerAuth = (HttpBearerAuth) auth;
+            bearerAuth.setBearerToken(token);
+            return bearerAuth.getBearerToken();
+        }
+    
+        return null;
+    }
+    
     public Response run(Input input)
             throws Throwable {
 

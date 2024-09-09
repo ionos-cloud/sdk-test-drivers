@@ -17,6 +17,7 @@ import com.ionoscloud.auth.HttpBasicAuth;
 import com.ionoscloud.auth.HttpBearerAuth;
 import com.ionoscloud.auth.ApiKeyAuth;
 import com.ionoscloud.models.*;
+import com.ionoscloud.models.Error;
 import com.thoughtworks.paranamer.AnnotationParanamer;
 import com.thoughtworks.paranamer.BytecodeReadingParanamer;
 import com.thoughtworks.paranamer.CachingParanamer;

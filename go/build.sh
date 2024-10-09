@@ -42,4 +42,7 @@ if ! grep -q "replace ${github_lib_path} => ${core_lib_path}" go.mod; then
 	echo "replace ${github_lib_path} => ${core_lib_path}" >> go.mod || exit 1
 fi
 
+# tidy after editing
+go mod tidy
+
 go build . || exit 1

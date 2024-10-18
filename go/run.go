@@ -205,114 +205,108 @@ func computeMethodArgs(methodFromVal reflect.Value, params []InputParam, output 
 }
 
 func callMethod(name string, method reflect.Value, args []reflect.Value, params []InputParam, output *Output) {
-
-	/* first call gets us an api object instance */
+	// Call the method to get an API object instance
 	objectRes := method.Call(args)
-
 	if len(objectRes) == 0 {
 		output.Error = &ErrorStruct{Message: fmt.Sprintf("Method %s didn't return anything", name)}
 		return
 	}
-	/* we set any unprocessed params by calling the appropriate builder methods */
+
+	// Process unprocessed parameters
 	for _, param := range params {
 		if param.Processed {
 			continue
 		}
 
-		// Parse filters parameters into: "filter.<property>=VALUE"
-		if strings.Compare(param.Name, "filters") == 0 {
-			// For filters parameter set in tests, use Filter as
-			// builderMethod with key & value as input arguments.
-			builderMethod := objectRes[0].MethodByName(strings.Title("filter"))
-			if builderMethod.IsValid() && builderMethod.Type().NumIn() == 2 {
-				kv := reflect.ValueOf(param.Value)
-				if kv.Kind() == reflect.Map {
-					for _, key := range kv.MapKeys() {
-						v := kv.MapIndex(key)
-						reflectArgFilter, err := convertParamToArg(key.String(), builderMethod.Type().In(0))
-						if err != nil {
-							output.Error = &ErrorStruct{Message: err.Error()}
-							return
-						}
-						reflectArgValue, err := convertParamToArg(v.Interface().(string), builderMethod.Type().In(1))
-						if err != nil {
-							output.Error = &ErrorStruct{Message: err.Error()}
-							return
-						}
-						objectRes = builderMethod.Call([]reflect.Value{reflectArgFilter, reflectArgValue})
-					}
-					// The filters param is marked as Processed after the
-					// builderMethod is called for each key&value from map.
-					param.Processed = true
-				} else {
-					output.Error = &ErrorStruct{Message: "no valid value param for filter query param"}
-					return
-				}
-			} else {
-				output.Error = &ErrorStruct{Message: "no valid builder method for filter query param"}
+		if param.Name == "filters" {
+			if err := processFilters(param, objectRes[0], output); err != nil {
+				output.Error = &ErrorStruct{Message: err.Error()}
 				return
 			}
 		} else {
-			/* find the method associated with this param */
-			builderMethod := objectRes[0].MethodByName(strings.Title(param.Name))
-			if builderMethod.IsValid() {
-				if param.Value != nil {
-					reflectArg, err := convertParamToArg(param.Value, builderMethod.Type().In(0))
-					if err != nil {
-						output.Error = &ErrorStruct{Message: err.Error()}
-						return
-					}
-					objectRes = builderMethod.Call([]reflect.Value{reflectArg})
-				}
-				param.Processed = true
+			if err := processParam(param, objectRes[0], output); err != nil {
+				output.Error = &ErrorStruct{Message: err.Error()}
+				return
 			}
-		}
-
-		if !param.Processed {
-			output.Error = &ErrorStruct{Message: fmt.Sprintf("operation %s: unknown parameter %s", name, param.Name)}
-			return
 		}
 	}
 
+	// Call the Execute method
 	executeMethod := objectRes[0].MethodByName("Execute")
 	if !executeMethod.IsValid() {
 		output.Error = &ErrorStruct{Message: fmt.Sprintf("Execute() method not found when calling %s", name)}
 		return
 	}
 
-	reflectRes := executeMethod.Call([]reflect.Value{})
+	handleExecuteResponse(executeMethod.Call([]reflect.Value{}), output)
+}
 
+func processFilters(param InputParam, object reflect.Value, output *Output) error {
+	builderMethod := object.MethodByName("Filter")
+	if !builderMethod.IsValid() || builderMethod.Type().NumIn() != 2 {
+		return fmt.Errorf("no valid builder method for filter query param")
+	}
+
+	kv := reflect.ValueOf(param.Value)
+	if kv.Kind() != reflect.Map {
+		return fmt.Errorf("no valid value param for filter query param")
+	}
+
+	for _, key := range kv.MapKeys() {
+		v := kv.MapIndex(key)
+		reflectArgFilter, err := convertParamToArg(key.String(), builderMethod.Type().In(0))
+		if err != nil {
+			return err
+		}
+		reflectArgValue, err := convertParamToArg(v.Interface().(string), builderMethod.Type().In(1))
+		if err != nil {
+			return err
+		}
+		object = builderMethod.Call([]reflect.Value{reflectArgFilter, reflectArgValue})[0]
+	}
+	param.Processed = true
+	return nil
+}
+
+func processParam(param InputParam, object reflect.Value, output *Output) error {
+	builderMethod := object.MethodByName(strings.Title(param.Name))
+	if !builderMethod.IsValid() {
+		return fmt.Errorf("operation %s: unknown parameter %s", param.Name, param.Name)
+	}
+
+	if param.Value != nil {
+		reflectArg, err := convertParamToArg(param.Value, builderMethod.Type().In(0))
+		if err != nil {
+			return err
+		}
+		object = builderMethod.Call([]reflect.Value{reflectArg})[0]
+	}
+	param.Processed = true
+	return nil
+}
+
+func handleExecuteResponse(reflectRes []reflect.Value, output *Output) {
 	responseLength := len(reflectRes)
 	var apiResponse *sdk.APIResponse
+
 	if responseLength == 3 {
 		output.Result = reflectRes[0].Interface()
-		apiResponseVar := reflectRes[1].Interface()
-		if apiResponseVar != nil {
-			apiResponse = apiResponseVar.(*sdk.APIResponse)
-		}
-		callErr := reflectRes[2].Interface()
-		if callErr != nil {
+		apiResponse = reflectRes[1].Interface().(*sdk.APIResponse)
+		if callErr := reflectRes[2].Interface(); callErr != nil {
 			output.Error = &ErrorStruct{Message: callErr.(error).Error()}
 		}
 	} else {
-		apiResponseVar := reflectRes[0].Interface()
-		if apiResponseVar != nil {
-			apiResponse = apiResponseVar.(*sdk.APIResponse)
-		}
-		callErr := reflectRes[1].Interface()
-		if callErr != nil {
+		apiResponse = reflectRes[0].Interface().(*sdk.APIResponse)
+		if callErr := reflectRes[1].Interface(); callErr != nil {
 			output.Error = &ErrorStruct{Message: callErr.(error).Error()}
 		}
 	}
 
-	lowerCaseHeader := make(http.Header)
 	if apiResponse != nil && apiResponse.Response != nil {
+		lowerCaseHeader := make(http.Header)
 		for key, value := range apiResponse.Header {
 			lowerCaseHeader[strings.ToLower(key)] = value
 		}
-	}
-
-	if apiResponse != nil && apiResponse.Response != nil {
 		output.HttpResponse = HttpResponse{
 			StatusCode: apiResponse.StatusCode,
 			Headers:    lowerCaseHeader,

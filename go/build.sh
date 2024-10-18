@@ -1,48 +1,108 @@
 #!/usr/bin/env bash
-#
-# {App} - {purpose, description}
-#
-
 
 function usage() {
-	echo "error: $1"
-	echo
-	echo "usage: build.sh <major> <version> <core_lib_path> [<github_lib_path>]"
-	echo "example: build.sh v5 v5.1.11 /home/runner/work/sdk-go [github.com/ionos-cloud/sdk-go/v5]"
-	exit 1
+  if [ -n "$1" ]; then
+    echo "$1" >&2
+  fi
+
+  echo "Usage: $0 [--no-input | -n] [--debug | -d] [--shared <path>] <major> <version> <core_lib_path> [<github_lib_path>]" >&2
+  echo ""
+  echo "Example: $0 v1 v1.3.11 /home/runner/work/sdk-go [github.com/ionos-cloud/sdk-go/v5]" >&2
+  echo ""
+  echo "Options:"
+  echo "  --shared <path>  Set the path for the shared SDK package."
+  echo "  -v, --verbose    Verbose output."
+  echo ""
+  exit 1
 }
 
-major="${1}"
-if [ "${major}" = "" ]; then
-	usage "major version not specified"
+# Args and flags
+DEBUG=false
+SHARED=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --shared)
+      if [ -z "$2" ]; then
+        usage "No path specified for --shared."
+      fi
+      SHARED=$2
+      shift 2
+      ;;
+    --verbose|-v)
+      DEBUG=true
+      shift
+      ;;
+    *)
+      if [ -z "$major" ]; then
+        major=$1
+      elif [ -z "$version" ]; then
+        version=$1
+      elif [ -z "$core_lib_path" ]; then
+        core_lib_path=$1
+      elif [ -z "$github_lib_path" ]; then
+        github_lib_path=$1
+      else
+        usage "Too many arguments. Unknown args: $@"
+      fi
+      shift
+      ;;
+  esac
+done
+
+if [ -z "$major" ]; then
+  usage "major version not specified"
+fi
+if [ -z "$version" ]; then
+  usage "version not specified"
+fi
+if [ -z "$core_lib_path" ]; then
+  usage "path to core lib not specified"
 fi
 
-version="${2}"
-if [ "${version}" = "" ]; then
-	usage "version not specified"
+# Set default for github_lib_path if not provided
+github_lib_path="${github_lib_path:-"github.com/ionos-cloud/sdk-go/${major}"}"
+
+# MacOS sed command
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  SED_CMD="sed -i ''"
+else
+  SED_CMD="sed -i"
 fi
 
-core_lib_path="${3}"
-if [ "${core_lib_path}" = "" ]; then
-	usage "path to core lib not specified"
+# Update go.mod with github_lib_path and version
+$SED_CMD "s%^\(.*\)github.com\/ionos-cloud\/sdk-go\(.*\)$%\1${github_lib_path} ${version}%g" go.mod || exit 1
+
+# Modify run.go based on the shared SDK path
+if [ -n "$SHARED" ]; then
+  # If --shared is set, use its value for _SDK_SHARED_
+  $SED_CMD "s%_SDK_SHARED_%${SHARED}%g" run.go || exit 1
+  $SED_CMD "s%_SDK_MAIN_%${github_lib_path}%g" run.go || exit 1
+else
+  # If --shared is not set, merge _SDK_SHARED_ into _SDK_MAIN_
+  $SED_CMD "s%_SDK_MAIN_%${github_lib_path}%g" run.go || exit 1
+  $SED_CMD "/_SDK_SHARED_/d" run.go || exit 1
 fi
 
-github_lib_path="${4:-"github.com/ionos-cloud/sdk-go/${major}"}"
-
-# replace core lib version
-# NOTE: THIS RUNS ON LINUX ONLY - DOESN'T WORK ON OSX - on OSX the -i flag requires an extension name to save backups to
-sed -i "s%^\(.*\)github.com\/ionos-cloud\/sdk-go\(.*\)$%\1${github_lib_path} ${version}%g" go.mod || exit 1
-sed -i "s%\"github.com\/ionos-cloud\/sdk-go\/\(.*\)\"$%\"${github_lib_path}\"%g" run.go || exit 1
-
-# remove backup file created by sed
+# Remove backup file created by sed (for macOS)
 rm -f go.mod.bak
 
-# use locally installed core library if not already replaced
+# Update go.mod with the replace directive
 if ! grep -q "replace ${github_lib_path} => ${core_lib_path}" go.mod; then
-	echo "replace ${github_lib_path} => ${core_lib_path}" >> go.mod || exit 1
+  echo "replace ${github_lib_path} => ${core_lib_path}" >> go.mod || exit 1
 fi
 
-# tidy after editing
+# Run go mod tidy to clean up go.mod
 go mod tidy
 
+# Build the project
 go build . || exit 1
+
+# Debug output if verbose flag is set
+if [ "$DEBUG" = true ]; then
+  echo "Build completed with the following configuration:"
+  echo "Major version: $major"
+  echo "Version: $version"
+  echo "Core library path: $core_lib_path"
+  echo "GitHub library path: $github_lib_path"
+  echo "Shared SDK path: $SHARED"
+fi

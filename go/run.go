@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -12,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	sdk "github.com/ionos-cloud/sdk-go/v5"
+	sdk "github.com/ionos-cloud/api-gateway"
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -103,76 +102,68 @@ func getParamsMap(params []InputParam) map[string]InputParam {
 }
 
 func convertParamToArg(param interface{}, arg reflect.Type) (reflect.Value, error) {
-
-	var ret reflect.Value
-
-	argTypeName := ""
-	var argKind reflect.Kind
 	if arg.Kind() == reflect.Ptr {
-		argKind = arg.Elem().Kind()
-		argTypeName = arg.Elem().Name()
-	} else {
-		argKind = arg.Kind()
-		argTypeName = arg.Name()
+		arg = arg.Elem()
 	}
 
-	if argKind == reflect.Struct {
+	switch arg.Kind() {
+	case reflect.Struct:
+		return convertToStruct(param, arg)
+	case reflect.Int32:
+		return convertToInt32(param)
+	case reflect.String:
+		return reflect.ValueOf(param), nil
+	default:
+		return reflect.ValueOf(param), nil
+	}
+}
 
-		var errDecode error
-		var decoder *mapstructure.Decoder
-
-		if argTypeName == reflect.TypeOf(time.Time{}).Name() {
-			var parsedTime time.Time
-			parsedTime, errDecode = time.Parse(time.RFC3339, param.(string))
-			if errDecode != nil {
-				return reflect.ValueOf(nil), errors.New(fmt.Sprintf("could not parse time parameter %s: %s", argTypeName, errDecode))
-			}
-			ret = reflect.ValueOf(parsedTime)
-			return ret, nil
-		}
-		if reflect.TypeOf(param).Kind() != reflect.Map {
-			return reflect.ValueOf(nil), errors.New(fmt.Sprintf("param expected to be a map for type %s", argTypeName))
-		}
-
-		if arg.Kind() == reflect.Ptr {
-			tmpRes := reflect.New(arg).Interface()
-			decoder, errDecode = getDecoder(&tmpRes)
-			if errDecode != nil {
-				return ret, errDecode
-			}
-			errDecode = decoder.Decode(param)
-			ret = reflect.ValueOf(tmpRes)
-
-		} else {
-			tmpRes := reflect.Zero(arg).Interface()
-			decoder, errDecode = getDecoder(&tmpRes)
-			if errDecode != nil {
-				return ret, errDecode
-			}
-			errDecode = decoder.Decode(param)
-			ret = reflect.ValueOf(tmpRes)
-
-		}
-
-		if errDecode != nil {
-			return ret, errDecode
-		}
-
-	} else {
-		paramKind := reflect.TypeOf(param).Kind()
-		if paramKind == reflect.Float64 && argKind == reflect.Int32 {
-			/* test runner sends a float64,  method signature is generated with int32
-			 * honestly, this is as bad as it can get - I mean, really!? let's cramp 64 bits in, maybe they'll fit ... */
-			ret = reflect.ValueOf(int32(param.(float64)))
-		} else {
-			if paramKind != argKind {
-				return ret, errors.New(fmt.Sprintf("Needed %s arg but got %s", argKind, paramKind))
-			}
-			ret = reflect.ValueOf(param)
-		}
+func convertToStruct(param interface{}, arg reflect.Type) (reflect.Value, error) {
+	if arg == reflect.TypeOf(time.Time{}) {
+		return convertToTime(param)
 	}
 
-	return ret, nil
+	if reflect.TypeOf(param).Kind() != reflect.Map {
+		return reflect.Value{}, fmt.Errorf("param expected to be a map for type %s", arg.Name())
+	}
+
+	tmpRes := reflect.New(arg).Interface()
+	decoder, err := getDecoder(&tmpRes)
+	if err != nil {
+		return reflect.Value{}, err
+	}
+	if err := decoder.Decode(param); err != nil {
+		return reflect.Value{}, err
+	}
+	return reflect.ValueOf(tmpRes), nil
+}
+
+func convertToTime(param interface{}) (reflect.Value, error) {
+	var parsedTime time.Time
+	var err error
+
+	switch v := param.(type) {
+	case string:
+		parsedTime, err = time.Parse(time.RFC3339, v)
+	case float64:
+		parsedTime = time.Unix(0, int64(v)*int64(time.Millisecond))
+	case int64:
+		parsedTime = time.Unix(0, v*int64(time.Millisecond))
+	default:
+		return reflect.Value{}, fmt.Errorf("could not parse time parameter: %v", param)
+	}
+
+	if err != nil {
+		return reflect.Value{}, fmt.Errorf("could not parse time parameter: %v", err)
+	}
+	return reflect.ValueOf(parsedTime), nil
+}
+
+func convertToInt32(param interface{}) (reflect.Value, error) {
+	if reflect.TypeOf(param).Kind() != reflect.Float64 {
+		return reflect.Value{}, fmt.Errorf("needed int32 arg but got %s", reflect.TypeOf(param).Kind())
+	}
+	return reflect.ValueOf(int32(param.(float64))), nil
 }
 
 func computeMethodArgs(methodFromVal reflect.Value, params []InputParam, output *Output) []reflect.Value {

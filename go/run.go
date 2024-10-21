@@ -399,7 +399,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	client := sdk2.NewAPIClient(sdk2.NewConfigurationFromEnv())
+	client := sdk1.NewAPIClient(sdk2.NewConfigurationFromEnv())
 
 	operation := strings.Title(strings.TrimSpace(input.Operation))
 	if operation == "" {

@@ -99,6 +99,7 @@ if [ -n "$SHARED" ]; then
 fi
 
 go mod tidy
+go mod vendor
 go build . || exit 1
 
 if [ "$DEBUG" = true ]; then

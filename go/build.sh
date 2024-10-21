@@ -75,7 +75,7 @@ $SED_CMD "s%^\(.*\)github.com\/ionos-cloud\/sdk-go\(.*\)$%\1${github_lib_path} $
 # Modify run.go based on the shared SDK path
 if [ -n "$SHARED" ]; then
   # If --shared is set, use its value for _SDK_SHARED_
-  $SED_CMD "s%_SDK_SHARED_%${SHARED}%g" run.go || exit 1
+  $SED_CMD "s%_SDK_SHARED_%github.com/ionos-cloud/sdk-go-bundle/shared%g" run.go || exit 1
   $SED_CMD "s%_SDK_MAIN_%${github_lib_path}%g" run.go || exit 1
 else
   # If --shared is not set, merge _SDK_SHARED_ into _SDK_MAIN_
@@ -91,13 +91,16 @@ if ! grep -q "replace ${github_lib_path} => ${core_lib_path}" go.mod; then
   echo "replace ${github_lib_path} => ${core_lib_path}" >> go.mod || exit 1
 fi
 
-# Run go mod tidy to clean up go.mod
-go mod tidy
+# if --shared is set, add replace directive for shared SDK
+if [ -n "$SHARED" ]; then
+  if ! grep -q "replace github.com/ionos-cloud/sdk-go-bundle/shared => ${SHARED}" go.mod; then
+    echo "replace github.com/ionos-cloud/sdk-go-bundle/shared => ${SHARED}" >> go.mod || exit 1
+  fi
+fi
 
-# Build the project
+go mod tidy
 go build . || exit 1
 
-# Debug output if verbose flag is set
 if [ "$DEBUG" = true ]; then
   echo "Build completed with the following configuration:"
   echo "Major version: $major"

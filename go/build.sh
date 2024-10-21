@@ -81,6 +81,7 @@ else
   # If --shared is not set, merge _SDK_SHARED_ into _SDK_MAIN_
   $SED_CMD "s%_SDK_MAIN_%${github_lib_path}%g" run.go || exit 1
   $SED_CMD "/_SDK_SHARED_/d" run.go || exit 1
+  $SED_CMD "s%sdk2.%sdk1.%g" run.go || exit 1
 fi
 
 # Remove backup file created by sed (for macOS)

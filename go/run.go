@@ -12,7 +12,9 @@ import (
 	"strings"
 	"time"
 
-	sdk "github.com/ionos-cloud/sdk-go/v5"
+	sdk1 "_SDK_MAIN_"   // For IonosTime
+	sdk2 "_SDK_SHARED_" // For all other functionalities
+
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -72,20 +74,20 @@ func ToTimeHookFunc() mapstructure.DecodeHookFuncType {
 		f reflect.Type,
 		t reflect.Type,
 		data interface{}) (interface{}, error) {
-		if t != reflect.TypeOf(&sdk.IonosTime{}) && t != reflect.TypeOf(sdk.IonosTime{}) {
+		if t != reflect.TypeOf(&sdk1.IonosTime{}) && t != reflect.TypeOf(sdk1.IonosTime{}) {
 			return data, nil
 		}
 
 		switch f.Kind() {
 		case reflect.String:
 			valTime, _ := time.Parse(time.RFC3339, data.(string))
-			return sdk.IonosTime{Time: valTime}, nil
+			return sdk1.IonosTime{Time: valTime}, nil
 		case reflect.Float64:
 			valTime := time.Unix(0, int64(data.(float64))*int64(time.Millisecond))
-			return sdk.IonosTime{Time: valTime}, nil
+			return sdk1.IonosTime{Time: valTime}, nil
 		case reflect.Int64:
 			valTime := time.Unix(0, data.(int64)*int64(time.Millisecond))
-			return sdk.IonosTime{Time: valTime}, nil
+			return sdk1.IonosTime{Time: valTime}, nil
 		default:
 			return data, nil
 		}
@@ -292,12 +294,12 @@ func callMethod(name string, method reflect.Value, args []reflect.Value, params 
 	reflectRes := executeMethod.Call([]reflect.Value{})
 
 	responseLength := len(reflectRes)
-	var apiResponse *sdk.APIResponse
+	var apiResponse *sdk2.APIResponse
 	if responseLength == 3 {
 		output.Result = reflectRes[0].Interface()
 		apiResponseVar := reflectRes[1].Interface()
 		if apiResponseVar != nil {
-			apiResponse = apiResponseVar.(*sdk.APIResponse)
+			apiResponse = apiResponseVar.(*sdk2.APIResponse)
 		}
 		callErr := reflectRes[2].Interface()
 		if callErr != nil {
@@ -306,7 +308,7 @@ func callMethod(name string, method reflect.Value, args []reflect.Value, params 
 	} else {
 		apiResponseVar := reflectRes[0].Interface()
 		if apiResponseVar != nil {
-			apiResponse = apiResponseVar.(*sdk.APIResponse)
+			apiResponse = apiResponseVar.(*sdk2.APIResponse)
 		}
 		callErr := reflectRes[1].Interface()
 		if callErr != nil {
@@ -337,9 +339,9 @@ func callWaitForRequest(method reflect.Value, args []reflect.Value, output *Outp
 	reflectRes := method.Call(args)
 	/* assuming we always have result, *ApiResponse, error */
 	apiResponseVar := reflectRes[0].Interface()
-	var apiResponse *sdk.APIResponse
+	var apiResponse *sdk2.APIResponse
 	if apiResponseVar != nil {
-		apiResponse = apiResponseVar.(*sdk.APIResponse)
+		apiResponse = apiResponseVar.(*sdk2.APIResponse)
 	}
 	callErr := reflectRes[1].Interface()
 	if callErr != nil {
@@ -397,7 +399,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	client := sdk.NewAPIClient(sdk.NewConfigurationFromEnv())
+	client := sdk1.NewAPIClient(sdk2.NewConfigurationFromEnv())
 
 	operation := strings.Title(strings.TrimSpace(input.Operation))
 	if operation == "" {

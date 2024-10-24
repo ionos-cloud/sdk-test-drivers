@@ -5,7 +5,7 @@ function usage() {
     echo "$1" >&2
   fi
 
-  echo "Usage: $0 [--no-input | -n] [--debug | -d] [--shared <path>] <major> <version> <core_lib_path> [<github_lib_path>]" >&2
+  echo "Usage: $0 [--verbose | -v] [--shared <path>] <major> <version> <core_lib_path> [<github_lib_path>]" >&2
   echo ""
   echo "Example: $0 v1 v1.3.11 /home/runner/work/sdk-go [github.com/ionos-cloud/sdk-go/v5]" >&2
   echo ""

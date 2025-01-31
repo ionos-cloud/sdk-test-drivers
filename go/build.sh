@@ -24,6 +24,7 @@ function usage() {
 # Args and flags
 DEBUG=false
 SHARED=""
+unset major version core_lib_path github_lib_path # unset to ensure they are not inherited from the environment
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --shared)

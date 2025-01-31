@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+echo ""
+echo " -- SDK Test Driver ./$0 --"
+echo " -- called as $0 $@ --"
+echo ""
+
 function usage() {
   if [ -n "$1" ]; then
     echo "$1" >&2

@@ -32,6 +32,7 @@ def sdkArtifactId    = project.getProperties().get("sdkArtifactId")
 
 dependencies {
     implementation "com.thoughtworks.paranamer:paranamer:2.8"
+    implementation 'com.google.code.gson:gson:2.13.1'
     implementation "${sdkPackageName}:${sdkArtifactId}:${sdkVersion}"
     implementation 'org.reflections:reflections:0.9.11'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.4.2'

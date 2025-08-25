@@ -23,7 +23,6 @@ public class Input {
     @NotBlank(message = "'operation' cannot be empty")
     String operation;
 
-    @NotNull(message = "'params' cannot be empty")
     List<Param> params;
 
     public static Input get() throws IOException {

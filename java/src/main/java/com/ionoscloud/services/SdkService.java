@@ -133,12 +133,18 @@ private String setAuthToken(String token, String authType) {
                 for (Method method : apiClass.getMethods()) {
                     if (method.getName().equals(operation + "WithHttpInfo")) {
                         /* get parameter list for api call */
-                        Object[] prm = getParameterList(
+                        Object[] prm;
+
+                        if (params != null) {
+                            prm = getParameterList(
                                 method, params.stream()
                                         .collect(Collectors.toMap(
                                                 Param::getName, Param::getValue
                                         ))
-                        );
+                            );
+                        } else {
+                            prm = getParameterList(method, new HashMap<String, Object>());
+                        }
 
                         log.info("found method " + operation + "WithHttpInfo() in class " + apiClass.getName());
 

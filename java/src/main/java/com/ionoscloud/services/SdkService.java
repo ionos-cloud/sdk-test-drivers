@@ -1,13 +1,7 @@
 package com.ionoscloud.services;
 
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.datatype.threetenbp.ThreeTenModule;
 import com.google.gson.Gson;
 import com.ionoscloud.ApiClient;
 import com.ionoscloud.ApiException;
@@ -323,20 +317,7 @@ private String setAuthToken(String token, String authType) {
 
         List<Object> paramList = new ArrayList<>();
 
-        ObjectMapper mapper = JsonMapper.builder().
-                enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS).
-                //adds support for enums that have different name than value. eg: de_txl(de/txl)
-                enable(DeserializationFeature.READ_ENUMS_USING_TO_STRING).
-                //support for string to OffsetDateTime conversion
-                enable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS).
-                build();
-        mapper.setVisibility(mapper.getSerializationConfig().getDefaultVisibilityChecker()
-                .withFieldVisibility(JsonAutoDetect.Visibility.NONE)
-                .withGetterVisibility(JsonAutoDetect.Visibility.ANY)
-                .withSetterVisibility(JsonAutoDetect.Visibility.ANY)
-                .withCreatorVisibility(JsonAutoDetect.Visibility.ANY));
-        //support for string to OffsetDateTime conversion
-        mapper.registerModule(new ThreeTenModule());
+        Gson gson = new Gson();
 
         for (String parameterName : methodParameterNames) {
             if (testParams.containsKey(parameterName) || testParams.containsKey(StringUtils.capitalize(parameterName))) {
@@ -348,9 +329,9 @@ private String setAuthToken(String token, String authType) {
 
 
                 if (testParameter instanceof Map || testParameter instanceof List) {
-                    paramList.add(mapper.convertValue(testParameter, parameterType));
+                    paramList.add(gson.fromJson(gson.toJson(testParameter), parameterType));
                 } else if (parameterType.getName().contentEquals(OffsetDateTime.class.getName()) || (parameterType.getName().contentEquals(UUID.class.getName()))) {
-                    paramList.add(mapper.convertValue(testParameter, parameterType));
+                    paramList.add(gson.fromJson(gson.toJson(testParameter), parameterType));
                 } else {
                     paramList.add(testParameter);
                 }

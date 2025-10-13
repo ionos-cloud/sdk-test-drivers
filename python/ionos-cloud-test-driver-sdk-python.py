@@ -75,7 +75,10 @@ if __name__ == "__main__":
             sys.stdout.write(json.dumps({}))
         else:
             classApi, method = get_class_and_method(operation)
-            return_data, status_code, response_headers = method(classApi(api_client), **params)
+            response = method(classApi(api_client), **params)
+            return_data = response.data
+            status_code = response.status_code
+            response_headers = response.headers
             response_headers = dict(map(lambda x: (x[0], x[1].split(",")), dict(response_headers).items()))
 
             return_data = api_client.sanitize_for_serialization(return_data)

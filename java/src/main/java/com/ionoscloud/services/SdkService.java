@@ -2,6 +2,7 @@ package com.ionoscloud.services;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.gson.Gson;
 import com.ionoscloud.ApiClient;
 import com.ionoscloud.ApiException;
@@ -163,6 +164,7 @@ private String setAuthToken(String token, String authType) {
             throws Throwable {
 
         ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
 
         log.info("call params: " + objectMapper.writeValueAsString(prm));
 

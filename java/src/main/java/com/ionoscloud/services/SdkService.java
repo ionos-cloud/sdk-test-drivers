@@ -44,6 +44,8 @@ public class SdkService {
     private static final String CLOUDAPI_TOKEN_AUTH = "Token Authentication";
     private static final String DBAAS_BASIC_AUTH = "basicAuth";
     private static final String DBAAS_TOKEN_AUTH = "tokenAuth";
+    private static final String AUTH_BASIC_AUTH = "BasicAuthentication";
+    private static final String AUTH_TOKEN_AUTH = "TokenAuthentication";
     private static final String WAIT_FOR_REQUEST = "waitForRequest";
     public SdkService() {
 
@@ -71,9 +73,14 @@ public class SdkService {
             // Configure HTTP basic authorization: Basic Authentication
             HttpBasicAuth basicAuthentication = (HttpBasicAuth) this.apiClient.getAuthentication(CLOUDAPI_BASIC_AUTH);
     
-            //for DBaaS, we have 'basicAuth', not "Basic Authentication"
+            //for DBaaS, we have "basicAuth", not "Basic Authentication"
             if (basicAuthentication == null) {
                basicAuthentication = (HttpBasicAuth) this.apiClient.getAuthentication(DBAAS_BASIC_AUTH);
+            }
+
+            //for the Authentication API, we have "BasicAuthentication", not "Basic Authentication" or "basicAuth"
+            if (basicAuthentication == null) {
+               basicAuthentication = (HttpBasicAuth) this.apiClient.getAuthentication(AUTH_BASIC_AUTH);
             }
             basicAuthentication.setUsername(username);
             basicAuthentication.setPassword(password);
@@ -82,10 +89,13 @@ public class SdkService {
 
 public String getAuthToken(String token) {
     if (token != null && !token.trim().isEmpty()) {
-        // Try CLOUDAPI_TOKEN_AUTH first, then fallback to DBAAS_TOKEN_AUTH
+        // Try CLOUDAPI_TOKEN_AUTH first, then fallback to DBAAS_TOKEN_AUTH, then fallback to AUTH_TOKEN_AUTH
         String authToken = setAuthToken(token, CLOUDAPI_TOKEN_AUTH);
         if (authToken == null) {
             authToken = setAuthToken(token, DBAAS_TOKEN_AUTH);
+        }
+        if (authToken == null) {
+            authToken = setAuthToken(token, AUTH_TOKEN_AUTH);
         }
         return authToken;
     }

@@ -343,8 +343,11 @@ private String setAuthToken(String token, String authType) {
 
                 if (testParameter instanceof Map || testParameter instanceof List) {
                     paramList.add(gson.fromJson(gson.toJson(testParameter), parameterType));
-                } else if (parameterType.getName().contentEquals(OffsetDateTime.class.getName()) || (parameterType.getName().contentEquals(UUID.class.getName()))) {
+                } else if (parameterType.getName().contentEquals(UUID.class.getName())) {
                     paramList.add(gson.fromJson(gson.toJson(testParameter), parameterType));
+                } else if (parameterType.getName().contentEquals(OffsetDateTime.class.getName())) {
+                    // FIX: Handle OffsetDateTime directly without Gson
+                    paramList.add(java.time.OffsetDateTime.parse((String) testParameter));
                 } else {
                     paramList.add(testParameter);
                 }

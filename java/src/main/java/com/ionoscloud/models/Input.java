@@ -2,6 +2,7 @@ package com.ionoscloud.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import jakarta.validation.ConstraintViolation;
@@ -37,6 +38,7 @@ public class Input {
         }
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         return mapper.readValue(stringBuilder.toString(), Input.class);
     }
 

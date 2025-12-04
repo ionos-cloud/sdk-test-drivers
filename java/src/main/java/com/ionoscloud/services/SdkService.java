@@ -2,6 +2,7 @@ package com.ionoscloud.services;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.gson.Gson;
 import com.ionoscloud.ApiClient;
@@ -175,6 +176,7 @@ private String setAuthToken(String token, String authType) {
 
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
         log.info("call params: " + objectMapper.writeValueAsString(prm));
 

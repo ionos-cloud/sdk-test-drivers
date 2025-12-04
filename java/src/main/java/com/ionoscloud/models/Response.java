@@ -18,7 +18,6 @@ public class Response {
     public String toString() {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
         try {
             return objectMapper.writeValueAsString(this);

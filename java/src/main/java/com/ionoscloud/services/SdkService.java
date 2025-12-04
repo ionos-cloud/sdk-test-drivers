@@ -176,7 +176,6 @@ private String setAuthToken(String token, String authType) {
 
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
         log.info("call params: " + objectMapper.writeValueAsString(prm));
 

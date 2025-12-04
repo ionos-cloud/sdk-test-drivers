@@ -38,7 +38,6 @@ public class Input {
         }
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         return mapper.readValue(stringBuilder.toString(), Input.class);
     }
 

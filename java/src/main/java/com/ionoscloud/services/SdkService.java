@@ -145,7 +145,15 @@ private String setAuthToken(String token, String authType) {
                             prm = getParameterList(
                                 method, params.stream()
                                         .collect(Collectors.toMap(
-                                                Param::getName, Param::getValue
+                                                Param::getName, 
+                                                p -> {
+                                                    Object val = p.getValue();
+                                                    // If it is a date/time object, convert it to a String immediately
+                                                    if (val instanceof java.time.temporal.Temporal) {
+                                                        return val.toString(); 
+                                                    }
+                                                    return val;
+                                                }
                                         ))
                             );
                         } else {

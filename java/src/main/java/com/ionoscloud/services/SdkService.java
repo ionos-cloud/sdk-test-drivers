@@ -345,7 +345,7 @@ private String setAuthToken(String token, String authType) {
                     paramList.add(gson.fromJson(gson.toJson(testParameter), parameterType));
                 } else if (parameterType.getName().contentEquals(UUID.class.getName())) {
                     paramList.add(gson.fromJson(gson.toJson(testParameter), parameterType));
-                } else if (parameterType.getName().contentEquals(OffsetDateTime.class.getName())) {
+                } else if (parameterType.getSimpleName().equals("OffsetDateTime")) {
                     // FIX: Handle OffsetDateTime directly without Gson
                     paramList.add(java.time.OffsetDateTime.parse((String) testParameter));
                 } else {
